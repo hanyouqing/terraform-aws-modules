@@ -1,0 +1,104 @@
+region = "us-east-1"
+
+project     = "web3"
+environment = "production"
+
+tags = {
+  Owner      = "DevOps"
+  CostCenter = "Infrastructure"
+  Code       = "terraform-aws-modules:organizations/examples/basic"
+}
+
+accounts = [
+  {
+    name                       = "development"
+    email                      = "aws-dev+development@example.com"
+    iam_user_access_to_billing = "ALLOW"
+    role_name                 = "OrganizationAccountAccessRole"
+    close_on_deletion         = false
+    tags = {
+      Environment = "development"
+      CostCenter  = "Engineering"
+    }
+  },
+  {
+    name                       = "staging"
+    email                      = "aws-dev+staging@example.com"
+    iam_user_access_to_billing = "ALLOW"
+    role_name                 = "OrganizationAccountAccessRole"
+    close_on_deletion         = false
+    tags = {
+      Environment = "staging"
+      CostCenter  = "Engineering"
+    }
+  },
+  {
+    name                       = "production"
+    email                      = "aws-dev+production@example.com"
+    iam_user_access_to_billing = "DENY"
+    role_name                 = "OrganizationAccountAccessRole"
+    close_on_deletion         = true
+    tags = {
+      Environment = "production"
+      CostCenter  = "Operations"
+    }
+  }
+]
+
+organizational_units = [
+  {
+    name      = "Workloads"
+    parent_id = null
+    tags = {
+      Purpose = "Application workloads"
+    }
+  },
+  {
+    name      = "Security"
+    parent_id = null
+    tags = {
+      Purpose = "Security and compliance"
+    }
+  }
+]
+
+service_control_policies = [
+  {
+    name        = "DenyRootUser"
+    description = "Prevent root user actions"
+    type        = "SERVICE_CONTROL_POLICY"
+    content = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Effect   = "Deny"
+          Action   = "*"
+          Resource = "*"
+          Condition = {
+            StringLike = {
+              "aws:PrincipalArn" = "arn:aws:iam::*:root"
+            }
+          }
+        }
+      ]
+    })
+    targets = []
+  },
+  {
+    name        = "DenyLeavingOrg"
+    description = "Prevent leaving AWS Organizations"
+    type        = "SERVICE_CONTROL_POLICY"
+    content = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Effect   = "Deny"
+          Action   = "organizations:LeaveOrganization"
+          Resource = "*"
+        }
+      ]
+    })
+    targets = []
+  }
+]
+

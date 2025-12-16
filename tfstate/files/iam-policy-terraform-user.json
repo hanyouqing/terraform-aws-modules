@@ -1,0 +1,37 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "S3StateBucketAccess",
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucket",
+        "s3:GetBucketVersioning",
+        "s3:GetBucketLocation"
+      ],
+      "Resource": "arn:aws:s3:::BUCKET_NAME"
+    },
+    {
+      "Sid": "S3StateObjectAccess",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:DeleteObject"
+      ],
+      "Resource": "arn:aws:s3:::BUCKET_NAME/*"
+    },
+    {
+      "Sid": "DynamoDBStateLockAccess",
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:GetItem",
+        "dynamodb:PutItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:DescribeTable"
+      ],
+      "Resource": "arn:aws:dynamodb:REGION:ACCOUNT_ID:table/TABLE_NAME"
+    }
+  ]
+}
+

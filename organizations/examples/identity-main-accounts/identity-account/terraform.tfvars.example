@@ -1,0 +1,40 @@
+region = "us-east-1"
+
+# Use assume role to access identity account (recommended)
+# aws_assume_role_arn = "arn:aws:iam::123456789012:role/OrganizationAccountAccessRole"
+
+# Or use AWS profile (for SSO or IAM user)
+# aws_profile = "identity-account-profile"
+
+identity_account_id = "123456789012"
+main_account_id     = "123456789013"
+
+# SSO permission set ARNs (optional, leave empty if not using SSO yet)
+# These will be used to allow SSO users to assume the roles
+# sso_permission_set_arns = []
+
+team_roles = {
+  developers = {
+    role_name       = "AssumeMainAccount-Developers"
+    target_role_name = "Developers"
+    external_id     = "assume-main-developers"
+  }
+  operations = {
+    role_name       = "AssumeMainAccount-Operations"
+    target_role_name = "Operations"
+    external_id     = "assume-main-operations"
+  }
+  security = {
+    role_name       = "AssumeMainAccount-Security"
+    target_role_name = "Security"
+    external_id     = "assume-main-security"
+  }
+}
+
+tags = {
+  Project     = "identity-main"
+  Environment = "production"
+  ManagedBy   = "terraform"
+  Code        = "terraform-aws-modules:organizations/examples/identity-main-accounts/identity-account"
+}
+

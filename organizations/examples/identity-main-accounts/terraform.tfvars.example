@@ -1,0 +1,113 @@
+region = "us-east-1"
+
+accounts = [
+  {
+    name                       = "identity"
+    email                      = "aws-dev+identity@example.com"
+    iam_user_access_to_billing = "DENY"
+    role_name                  = "OrganizationAccountAccessRole"
+    close_on_deletion          = false
+    tags = {
+      Purpose     = "Identity and SSO"
+      AccountType = "Identity"
+    }
+  },
+  {
+    name                       = "main"
+    email                      = "aws-dev+main@example.com"
+    iam_user_access_to_billing = "ALLOW"
+    role_name                  = "OrganizationAccountAccessRole"
+    close_on_deletion          = false
+    tags = {
+      Purpose     = "Business Resources"
+      AccountType = "Workload"
+    }
+  }
+]
+
+organizational_units = []
+
+service_control_policies = [
+  {
+    name        = "DenyRootUser"
+    description = "Prevent root user actions"
+    type        = "SERVICE_CONTROL_POLICY"
+    content = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Effect   = "Deny"
+          Action   = "*"
+          Resource = "*"
+          Condition = {
+            StringLike = {
+              "aws:PrincipalArn" = "arn:aws:iam::*:root"
+            }
+          }
+        }
+      ]
+    })
+    targets = []
+  },
+  {
+    name        = "DenyLeavingOrg"
+    description = "Prevent leaving AWS Organizations"
+    type        = "SERVICE_CONTROL_POLICY"
+    content = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Effect   = "Deny"
+          Action   = "organizations:LeaveOrganization"
+          Resource = "*"
+        }
+      ]
+    })
+    targets = []
+  },
+  {
+    name        = "DenyIdentityAccountActions"
+    description = "Deny all actions in identity account except assume role and OrganizationAccountAccessRole. Note: IAM role policies provide the primary access control."
+    type        = "SERVICE_CONTROL_POLICY"
+    content = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Sid    = "DenyAllExceptAssumeRoleAndOrgRole"
+          Effect = "Deny"
+          Action = [
+            "*"
+          ]
+          Resource = "*"
+          Condition = {
+            # Allow OrganizationAccountAccessRole for Terraform management
+            StringNotLike = {
+              "aws:PrincipalArn" = [
+                "arn:aws:iam::*:role/OrganizationAccountAccessRole",
+                "arn:aws:sts::*:assumed-role/OrganizationAccountAccessRole/*"
+              ]
+            }
+            # Allow sts:AssumeRole and sts:GetCallerIdentity actions
+            StringNotEquals = {
+              "aws:Action" = [
+                "sts:AssumeRole",
+                "sts:GetCallerIdentity"
+              ]
+            }
+          }
+        }
+      ]
+    })
+    targets = ["identity"]
+  }
+]
+
+project     = "identity-main"
+environment = "production"
+
+tags = {
+  Owner      = "DevOps"
+  CostCenter = "Infrastructure"
+  Code       = "terraform-aws-modules:organizations/examples/identity-main-accounts"
+}
+

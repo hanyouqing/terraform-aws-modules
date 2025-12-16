@@ -1,0 +1,40 @@
+# ==============================================================================
+# Shared Variables (Tags, Name, etc.)
+# ==============================================================================
+environment = "production"
+project     = "web3"
+region      = "us-east-1"
+
+code  = "web3:terraform/terraform-tfstate"
+owner = "DevOps"
+
+tags = {
+  CostCenter = "Operations"
+  Backup     = "required"
+}
+
+# ==============================================================================
+# S3 Bucket Configuration
+# ==============================================================================
+# bucket_name = "web3-terraform-state-production"  # Optional: custom bucket name
+enable_versioning              = true
+enable_server_side_encryption  = true
+sse_algorithm                  = "AES256"  # Options: AES256 or aws:kms
+# kms_key_id = "arn:aws:kms:us-east-1:123456789012:key/your-kms-key-id"  # Required if sse_algorithm is aws:kms
+
+# ==============================================================================
+# Lifecycle Configuration
+# ==============================================================================
+enable_lifecycle_rule              = true
+noncurrent_version_expiration_days = 90
+
+# ==============================================================================
+# Security Configuration
+# ==============================================================================
+enable_public_access_block = true
+
+# ==============================================================================
+# DynamoDB Table Configuration
+# ==============================================================================
+# dynamodb_table_name = "web3-terraform-state-lock-production"  # Optional: custom table name
+
