@@ -13,13 +13,13 @@ private_subnets  = ["10.0.11.0/24", "10.0.12.0/24", "10.0.13.0/24"]
 database_subnets = ["10.0.21.0/24", "10.0.22.0/24", "10.0.23.0/24"]
 
 enable_nat_gateway = true
-single_nat_gateway = false  # Use multiple NAT Gateways for HA in production
+single_nat_gateway = false # Use multiple NAT Gateways for HA in production
 
 enable_dns_hostnames = true
 enable_dns_support   = true
 
-enable_flow_log              = true
-flow_log_destination_type    = "cloud-watch-logs"
+enable_flow_log           = true
+flow_log_destination_type = "cloud-watch-logs"
 
 # Allowlist configuration - replace with your actual IPs
 allowlist_ipv4_blocks = [

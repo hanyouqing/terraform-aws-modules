@@ -12,10 +12,11 @@
 
 terraform {
   backend "s3" {
-    bucket         = "terraform-state-for-terraform-aws-modules-example"
-    key            = "hanyouqing/terraform-aws-modules:vpc/examples/complete/terraform.tfstate"
-    region         = "us-east-1"
-    encrypt        = true
-    use_lockfile   = true
+    bucket               = "terraform-state-for-terraform-aws-modules-example"
+    key                  = "hanyouqing/terraform-aws-modules:vpc/examples/complete/terraform.tfstate"
+    region               = "us-east-1"
+    encrypt              = true
+    use_lockfile         = true
+    workspace_key_prefix = "env:production"
   }
 }

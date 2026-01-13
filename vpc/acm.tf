@@ -7,7 +7,7 @@ resource "aws_acm_certificate" "environment" {
   subject_alternative_names = var.environment == "production" ? [
     "*.${var.environment}.${var.domain}",
     "*.${var.domain}"
-  ] : [
+    ] : [
     "*.${var.environment}.${var.domain}"
   ]
 

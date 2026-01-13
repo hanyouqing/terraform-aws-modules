@@ -1,6 +1,9 @@
 # Local .terraform directories
 .terraform/
 
+# Terraform lock files
+.terraform.lock.hcl
+
 # .tfstate files
 *.tfstate
 *.tfstate.*
@@ -32,10 +35,12 @@ override.tf.json
 # Include tfplan files to ignore the plan output of command: terraform plan -out=tfplan
 # example: *tfplan*
 
-# Ignore CLI configuration files
+# Ignore CLI configuration files (keep .terraformrc.example in repo)
+# Note: .terraformrc is ignored, but .terraformrc.example should be committed
 .terraformrc
 terraform.rc
 
 
-# Environment variables
+# Environment variables (keep .env.sh.example in repo)
 .env.sh
+.env.sh.local
