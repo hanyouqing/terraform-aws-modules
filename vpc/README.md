@@ -135,18 +135,42 @@ See [variables.tf](./variables.tf) for the complete list of available variables.
 | vpc_id | ID of the VPC |
 | vpc_name | Name of the VPC |
 | vpc_cidr_block | CIDR block of the VPC |
-| public_subnet_ids | IDs of the public subnets |
-| private_subnet_ids | IDs of the private subnets |
-| database_subnet_ids | IDs of the database subnets |
-| nat_gateway_ids | IDs of the NAT Gateways |
+| public_subnet_ids | IDs of the public subnets (list format) |
+| public_subnet_ids_map | Map of public subnet IDs by name (format: {name => id}) |
+| private_subnet_ids | IDs of the private subnets (list format) |
+| private_subnet_ids_map | Map of private subnet IDs by name (format: {name => id}) |
+| database_subnet_ids | IDs of the database subnets (list format) |
+| database_subnet_ids_map | Map of database subnet IDs by name (format: {name => id}) |
+| nat_gateway_ids | IDs of the NAT Gateways (list format) |
+| nat_gateway_ids_map | Map of NAT Gateway IDs by name (format: {name => id}) |
+| nat_public_ips_map | Map of NAT Gateway public IPs by name (format: {name => public_ip}) |
 | internet_gateway_id | ID of the Internet Gateway |
-| allowlist_prefix_list_id_ipv4 | ID of the IPv4 Managed Prefix List |
+| allowlist_prefix_list_id_ipv4 | ID of the IPv4 Managed Prefix List for allowlist |
+| allowlist_prefix_list_arn_ipv4 | ARN of the IPv4 Managed Prefix List for allowlist |
+| allowlist_prefix_list_name_ipv4 | Name of the IPv4 Managed Prefix List for allowlist |
+| allowlist_prefix_list_id_ipv6 | ID of the IPv6 Managed Prefix List for allowlist |
+| allowlist_prefix_list_arn_ipv6 | ARN of the IPv6 Managed Prefix List for allowlist |
+| allowlist_prefix_list_name_ipv6 | Name of the IPv6 Managed Prefix List for allowlist |
+| allowlist_prefix_list_ids_map | Map of allowlist prefix list IDs by name (format: {name => id}) |
+| allowlist_prefix_list_arns_map | Map of allowlist prefix list ARNs by name (format: {name => arn}) |
 | jump_security_group_id | ID of the jump security group |
 | public_security_group_id | ID of the public security group |
 | private_security_group_id | ID of the private security group |
 | database_security_group_id | ID of the database security group |
+| security_group_jump_id | ID of the jump security group |
+| security_group_public_id | ID of the public security group |
+| security_group_private_id | ID of the private security group |
+| security_group_database_id | ID of the database security group |
 | vpc_endpoints_security_group_id | ID of the VPC endpoints security group |
 | hosted_zone_id | ID of the Route 53 hosted zone (if domain is set) |
+| hosted_zone_name | Name of the Route 53 hosted zone (if domain is set) |
+| hosted_zone_arn | ARN of the Route 53 hosted zone (if domain is set) |
+| private_hosted_zone_id | ID of the Route 53 private hosted zone (production only, if domain is set) |
+| private_hosted_zone_name | Name of the Route 53 private hosted zone (production only, if domain is set) |
+| private_hosted_zone_arn | ARN of the Route 53 private hosted zone (production only, if domain is set) |
+| route53_zone_ids_map | Map of Route53 hosted zone IDs by name (format: {name => zone_id}) |
+| route53_zone_arns_map | Map of Route53 hosted zone ARNs by name (format: {name => arn}) |
+| route53_zone_name_servers_map | Map of Route53 hosted zone name servers by name (format: {name => [name_servers]}) |
 | acm_certificate_arn | ARN of the ACM certificate (if domain is set) |
 
 See [outputs.tf](./outputs.tf) for the complete list of available outputs.

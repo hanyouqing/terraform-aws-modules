@@ -1,0 +1,27 @@
+# VPC Basic Example Configuration
+# Copy this file to terraform.tfvars and update with your values
+
+region      = "us-east-1"
+project     = "my-project"
+environment = "testing"
+
+# VPC Configuration
+vpc_cidr = "10.0.0.0/16"
+
+# Availability Zones (reduced to 2 for minimal cost)
+availability_zones = ["us-east-1a", "us-east-1b"]
+
+# Subnet Configuration (reduced to 2 subnets per type for minimal cost)
+public_subnets   = ["10.0.1.0/24", "10.0.2.0/24"]
+private_subnets  = ["10.0.11.0/24", "10.0.12.0/24"]
+database_subnets = []  # Empty for minimal cost
+
+# Cost Optimization: Disabled by default for minimal cost
+enable_nat_gateway = false  # Set to true if private subnets need internet access
+single_nat_gateway = true   # Only used if enable_nat_gateway = true
+enable_flow_log    = false  # Set to true if you need network monitoring
+
+# Optional: Additional tags
+tags = {
+  ManagedBy = "terraform"
+}

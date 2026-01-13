@@ -14,8 +14,15 @@ output "vpc_cidr_block" {
 }
 
 output "public_subnet_ids" {
-  description = "IDs of the public subnets"
+  description = "IDs of the public subnets (list format, for backward compatibility)"
   value       = aws_subnet.public[*].id
+}
+
+output "public_subnet_ids_map" {
+  description = "Map of public subnet IDs by name (format: {name => id})"
+  value = {
+    for idx, subnet in aws_subnet.public : "${local.name}-public-${substr(var.availability_zones[idx], -1, 1)}" => subnet.id
+  }
 }
 
 output "public_subnet_cidrs" {
@@ -24,8 +31,15 @@ output "public_subnet_cidrs" {
 }
 
 output "private_subnet_ids" {
-  description = "IDs of the private subnets"
+  description = "IDs of the private subnets (list format, for backward compatibility)"
   value       = aws_subnet.private[*].id
+}
+
+output "private_subnet_ids_map" {
+  description = "Map of private subnet IDs by name (format: {name => id})"
+  value = {
+    for idx, subnet in aws_subnet.private : "${local.name}-private-${substr(var.availability_zones[idx], -1, 1)}" => subnet.id
+  }
 }
 
 output "private_subnet_cidrs" {
@@ -34,8 +48,15 @@ output "private_subnet_cidrs" {
 }
 
 output "database_subnet_ids" {
-  description = "IDs of the database subnets"
+  description = "IDs of the database subnets (list format, for backward compatibility)"
   value       = aws_subnet.database[*].id
+}
+
+output "database_subnet_ids_map" {
+  description = "Map of database subnet IDs by name (format: {name => id})"
+  value = length(aws_subnet.database) > 0 ? {
+    for idx, subnet in aws_subnet.database : "${local.name}-database-${substr(var.availability_zones[idx], -1, 1)}" => subnet.id
+  } : {}
 }
 
 output "database_subnet_cidrs" {
@@ -49,13 +70,27 @@ output "database_subnet_group_id" {
 }
 
 output "nat_gateway_ids" {
-  description = "IDs of the NAT Gateways"
+  description = "IDs of the NAT Gateways (list format, for backward compatibility)"
   value       = aws_nat_gateway.main[*].id
 }
 
+output "nat_gateway_ids_map" {
+  description = "Map of NAT Gateway IDs by name (format: {name => id})"
+  value = length(aws_nat_gateway.main) > 0 ? {
+    for idx, nat in aws_nat_gateway.main : "${local.name}-nat-${idx + 1}" => nat.id
+  } : {}
+}
+
 output "nat_public_ips" {
-  description = "Public IPs of the NAT Gateways"
+  description = "Public IPs of the NAT Gateways (list format, for backward compatibility)"
   value       = aws_eip.nat[*].public_ip
+}
+
+output "nat_public_ips_map" {
+  description = "Map of NAT Gateway public IPs by name (format: {name => public_ip})"
+  value = length(aws_eip.nat) > 0 ? {
+    for idx, eip in aws_eip.nat : "${local.name}-nat-${idx + 1}" => eip.public_ip
+  } : {}
 }
 
 output "internet_gateway_id" {
@@ -260,6 +295,32 @@ output "allowlist_prefix_list_name_ipv6" {
   value       = length(aws_ec2_managed_prefix_list.allowlist_ipv6) > 0 ? aws_ec2_managed_prefix_list.allowlist_ipv6[0].name : null
 }
 
+# Allowlist Prefix List IDs Map
+output "allowlist_prefix_list_ids_map" {
+  description = "Map of allowlist prefix list IDs by name (format: {name => id})"
+  value = merge(
+    length(aws_ec2_managed_prefix_list.allowlist_ipv4) > 0 ? {
+      "${aws_ec2_managed_prefix_list.allowlist_ipv4[0].name}" = aws_ec2_managed_prefix_list.allowlist_ipv4[0].id
+    } : {},
+    length(aws_ec2_managed_prefix_list.allowlist_ipv6) > 0 ? {
+      "${aws_ec2_managed_prefix_list.allowlist_ipv6[0].name}" = aws_ec2_managed_prefix_list.allowlist_ipv6[0].id
+    } : {}
+  )
+}
+
+# Allowlist Prefix List ARNs Map
+output "allowlist_prefix_list_arns_map" {
+  description = "Map of allowlist prefix list ARNs by name (format: {name => arn})"
+  value = merge(
+    length(aws_ec2_managed_prefix_list.allowlist_ipv4) > 0 ? {
+      "${aws_ec2_managed_prefix_list.allowlist_ipv4[0].name}" = aws_ec2_managed_prefix_list.allowlist_ipv4[0].arn
+    } : {},
+    length(aws_ec2_managed_prefix_list.allowlist_ipv6) > 0 ? {
+      "${aws_ec2_managed_prefix_list.allowlist_ipv6[0].name}" = aws_ec2_managed_prefix_list.allowlist_ipv6[0].arn
+    } : {}
+  )
+}
+
 output "jump_security_group_id" {
   description = "ID of the jump security group"
   value       = aws_security_group.jump.id
@@ -303,6 +364,27 @@ output "private_security_group_arn" {
 output "private_security_group_name" {
   description = "Name of the private security group"
   value       = aws_security_group.private.name
+}
+
+# Security Group IDs (separate outputs)
+output "security_group_jump_id" {
+  description = "ID of the jump security group"
+  value       = aws_security_group.jump.id
+}
+
+output "security_group_public_id" {
+  description = "ID of the public security group"
+  value       = aws_security_group.public.id
+}
+
+output "security_group_private_id" {
+  description = "ID of the private security group"
+  value       = aws_security_group.private.id
+}
+
+output "security_group_database_id" {
+  description = "ID of the database security group"
+  value       = aws_security_group.database.id
 }
 
 output "database_security_group_id" {
@@ -579,6 +661,45 @@ output "private_hosted_zone_arn" {
 output "private_hosted_zone_name_servers" {
   description = "Name servers for the Route 53 private hosted zone (private-production.mini-verse.org)"
   value       = var.environment == "production" && var.domain != null ? aws_route53_zone.private[0].name_servers : null
+}
+
+# Route53 Zone IDs Map
+output "route53_zone_ids_map" {
+  description = "Map of Route53 hosted zone IDs by name (format: {name => zone_id})"
+  value = merge(
+    var.domain != null ? {
+      "${aws_route53_zone.main[0].name}" = aws_route53_zone.main[0].zone_id
+    } : {},
+    var.environment == "production" && var.domain != null ? {
+      "${aws_route53_zone.private[0].name}" = aws_route53_zone.private[0].zone_id
+    } : {}
+  )
+}
+
+# Route53 Zone ARNs Map
+output "route53_zone_arns_map" {
+  description = "Map of Route53 hosted zone ARNs by name (format: {name => arn})"
+  value = merge(
+    var.domain != null ? {
+      "${aws_route53_zone.main[0].name}" = aws_route53_zone.main[0].arn
+    } : {},
+    var.environment == "production" && var.domain != null ? {
+      "${aws_route53_zone.private[0].name}" = aws_route53_zone.private[0].arn
+    } : {}
+  )
+}
+
+# Route53 Zone Name Servers Map
+output "route53_zone_name_servers_map" {
+  description = "Map of Route53 hosted zone name servers by name (format: {name => [name_servers]})"
+  value = merge(
+    var.domain != null ? {
+      "${aws_route53_zone.main[0].name}" = aws_route53_zone.main[0].name_servers
+    } : {},
+    var.environment == "production" && var.domain != null ? {
+      "${aws_route53_zone.private[0].name}" = aws_route53_zone.private[0].name_servers
+    } : {}
+  )
 }
 
 # Reminder Outputs (zzz_ prefix ensures they appear last)

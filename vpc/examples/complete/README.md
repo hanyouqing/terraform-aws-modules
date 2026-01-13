@@ -27,9 +27,11 @@ cp terraform.tfvars.example terraform.tfvars
 ```
 
 2. Edit `terraform.tfvars` with your specific values:
+   - Update `region`, `project`, `environment` as needed
    - Update `allowlist_ipv4_blocks` with your office/VPN IPs
    - Set `domain` if you want Route 53 hosted zone
-   - Adjust CIDR blocks if needed
+   - Adjust CIDR blocks if they conflict with existing networks
+   - Set `single_nat_gateway = true` for non-production to save costs
 
 3. Initialize Terraform:
 ```bash

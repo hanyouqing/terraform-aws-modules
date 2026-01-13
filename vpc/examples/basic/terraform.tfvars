@@ -14,10 +14,10 @@ database_subnets = ["10.0.21.0/24", "10.0.22.0/24", "10.0.23.0/24"]
 enable_nat_gateway = true
 single_nat_gateway = true
 
-enable_flow_log = true
+enable_flow_log = false
 
 tags = {
   Owner      = "DevOps"
   CostCenter = "Infrastructure"
-  Code       = "terraform-aws-modules:vpc/examples/basic"
+  Code       = "hanyouqing/terraform-aws-modules:vpc/examples/basic"
 }

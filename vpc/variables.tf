@@ -570,9 +570,9 @@ variable "database_security_group_allowed_cidr_blocks" {
 }
 
 variable "database_security_group_allowed_ports" {
-  description = "Ports allowed for database security group ingress. Common database ports: 3306 (MySQL), 5432 (PostgreSQL), 1433 (SQL Server), 27017 (MongoDB)"
+  description = "Ports allowed for database security group ingress. Common database ports: 1433 (SQL Server), 3306 (MySQL), 5432 (PostgreSQL), 6379 (Redis), 27017 (MongoDB)"
   type        = list(number)
-  default     = [3306, 5432]
+  default     = [1433, 3306, 5432, 6379, 27017]
 
   validation {
     condition = alltrue([

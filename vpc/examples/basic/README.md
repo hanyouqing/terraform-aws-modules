@@ -18,7 +18,10 @@ This example demonstrates a minimal VPC configuration suitable for testing envir
 cp terraform.tfvars.example terraform.tfvars
 ```
 
-2. Edit `terraform.tfvars` with your specific values
+2. Edit `terraform.tfvars` with your specific values:
+   - Update `region`, `project`, `environment` as needed
+   - Adjust `vpc_cidr` and subnet CIDR blocks if they conflict with existing networks
+   - The default configuration is optimized for minimal cost (NAT Gateway and Flow Logs disabled)
 
 3. Initialize Terraform:
 ```bash

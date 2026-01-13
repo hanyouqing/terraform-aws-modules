@@ -12,7 +12,7 @@
 
 terraform {
   backend "s3" {
-    bucket               = "terraform-state-for-terraform-aws-modules-example"
+    bucket               = "terraform-aws-modules-example-state"
     key                  = "hanyouqing/terraform-aws-modules:vpc/examples/basic/terraform.tfstate"
     region               = "us-east-1"
     encrypt              = true

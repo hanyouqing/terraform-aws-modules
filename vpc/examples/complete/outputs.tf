@@ -43,6 +43,16 @@ output "allowlist_prefix_list_id_ipv4" {
   value       = module.vpc.allowlist_prefix_list_id_ipv4
 }
 
+output "allowlist_prefix_list_ids_map" {
+  description = "Map of allowlist prefix list IDs by name"
+  value       = module.vpc.allowlist_prefix_list_ids_map
+}
+
+output "allowlist_prefix_list_arns_map" {
+  description = "Map of allowlist prefix list ARNs by name"
+  value       = module.vpc.allowlist_prefix_list_arns_map
+}
+
 output "jump_security_group_id" {
   description = "ID of the jump security group"
   value       = module.vpc.jump_security_group_id
@@ -86,5 +96,61 @@ output "hosted_zone_id" {
 output "acm_certificate_arn" {
   description = "ARN of the ACM certificate"
   value       = module.vpc.acm_certificate_arn
+}
+
+# Map format outputs
+output "public_subnet_ids_map" {
+  description = "Map of public subnet IDs by name"
+  value       = module.vpc.public_subnet_ids_map
+}
+
+output "private_subnet_ids_map" {
+  description = "Map of private subnet IDs by name"
+  value       = module.vpc.private_subnet_ids_map
+}
+
+output "database_subnet_ids_map" {
+  description = "Map of database subnet IDs by name"
+  value       = module.vpc.database_subnet_ids_map
+}
+
+output "nat_gateway_ids_map" {
+  description = "Map of NAT Gateway IDs by name"
+  value       = module.vpc.nat_gateway_ids_map
+}
+
+output "security_group_jump_id" {
+  description = "ID of the jump security group"
+  value       = module.vpc.security_group_jump_id
+}
+
+output "security_group_public_id" {
+  description = "ID of the public security group"
+  value       = module.vpc.security_group_public_id
+}
+
+output "security_group_private_id" {
+  description = "ID of the private security group"
+  value       = module.vpc.security_group_private_id
+}
+
+output "security_group_database_id" {
+  description = "ID of the database security group"
+  value       = module.vpc.security_group_database_id
+}
+
+output "route53_zone_ids_map" {
+  description = "Map of Route53 hosted zone IDs by name"
+  value       = module.vpc.route53_zone_ids_map
+}
+
+output "route53_zone_arns_map" {
+  description = "Map of Route53 hosted zone ARNs by name"
+  value       = module.vpc.route53_zone_arns_map
+}
+
+output "route53_zone_name_servers_map" {
+  description = "Map of Route53 hosted zone name servers by name"
+  value       = module.vpc.route53_zone_name_servers_map
 }
 
