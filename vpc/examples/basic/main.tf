@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 1.14.2"
+  required_version = ">= 1.14"
 
   required_providers {
     aws = {
@@ -27,6 +27,7 @@ module "vpc" {
   private_subnets    = var.private_subnets
   database_subnets   = var.database_subnets
 
+  # Cost optimization: Disable NAT Gateway and Flow Logs by default for minimal cost
   enable_nat_gateway = var.enable_nat_gateway
   single_nat_gateway = var.single_nat_gateway
 
