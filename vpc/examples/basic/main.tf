@@ -34,6 +34,8 @@ module "vpc" {
   enable_flow_log      = var.enable_flow_log
   enable_vpc_endpoints = var.enable_vpc_endpoints
 
+  domain = var.domain
+
   tags = var.tags
 }
 

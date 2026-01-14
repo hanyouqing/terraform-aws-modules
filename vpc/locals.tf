@@ -99,7 +99,7 @@ locals {
         subnet_key = "${local.name}-public-${substr(var.availability_zones[0], -1, 1)}"
         az_suffix  = substr(var.availability_zones[0], -1, 1)
       }
-    } : {
+      } : {
       for idx, az in var.availability_zones : "${local.name}-nat-${substr(az, -1, 1)}" => {
         index      = idx
         subnet_key = "${local.name}-public-${substr(az, -1, 1)}"

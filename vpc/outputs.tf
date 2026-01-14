@@ -585,22 +585,22 @@ output "base_domain" {
 
 output "hosted_zone_id" {
   description = "ID of the Route 53 hosted zone"
-  value       = var.domain != null ? aws_route53_zone.main[0].zone_id : null
+  value       = var.domain != null ? aws_route53_zone.public[0].zone_id : null
 }
 
 output "hosted_zone_name" {
   description = "Name of the Route 53 hosted zone"
-  value       = var.domain != null ? aws_route53_zone.main[0].name : null
+  value       = var.domain != null ? aws_route53_zone.public[0].name : null
 }
 
 output "hosted_zone_name_servers" {
   description = "Name servers for the Route 53 hosted zone (use these to configure NS records in parent domain)"
-  value       = var.domain != null ? aws_route53_zone.main[0].name_servers : null
+  value       = var.domain != null ? aws_route53_zone.public[0].name_servers : null
 }
 
 output "hosted_zone_name_servers_list" {
   description = "List of name servers for easy copy-paste (one per line)"
-  value       = var.domain != null ? join("\n", aws_route53_zone.main[0].name_servers) : null
+  value       = var.domain != null ? join("\n", aws_route53_zone.public[0].name_servers) : null
 }
 
 output "hosted_zone_ns_records" {
@@ -609,8 +609,40 @@ output "hosted_zone_ns_records" {
     subdomain = var.environment
     type      = "NS"
     ttl       = 3600
-    values    = aws_route53_zone.main[0].name_servers
+    values    = aws_route53_zone.public[0].name_servers
   } : null
+}
+
+output "hosted_zone_ns_records_formatted" {
+  description = "NS records in a formatted string for easy copy-paste to DNS providers"
+  value = var.domain != null ? join("\n", [
+    "# NS Records for ${var.environment}.${var.domain}",
+    "# Add these NS records in your parent domain (${var.domain}) DNS provider",
+    "",
+    "Type: NS",
+    "Name: ${var.environment}",
+    "TTL: 3600",
+    "Values:",
+    join("\n", [for ns in aws_route53_zone.public[0].name_servers : "  ${ns}"]),
+    "",
+    "# Total: ${length(aws_route53_zone.public[0].name_servers)} NS records"
+  ]) : null
+}
+
+output "hosted_zone_ns_records_cloudflare" {
+  description = "NS records formatted specifically for Cloudflare DNS (JSON format)"
+  value = var.domain != null ? jsonencode({
+    type    = "NS"
+    name    = var.environment
+    content = aws_route53_zone.public[0].name_servers
+    ttl     = 3600
+    comment = "Delegated to AWS Route53 for ${var.environment}.${var.domain}"
+  }) : null
+}
+
+output "hosted_zone_ns_records_list" {
+  description = "List of NS record values (name servers) for programmatic use"
+  value       = var.domain != null ? aws_route53_zone.public[0].name_servers : []
 }
 
 output "hosted_zone_delegation_instructions" {
@@ -619,27 +651,79 @@ output "hosted_zone_delegation_instructions" {
     "⚠️  DNS DELEGATION INSTRUCTIONS:",
     "",
     "To delegate ${var.environment}.${var.domain} to Route53, add the following NS records",
-    "in your parent domain (${var.domain}) DNS provider (e.g., Cloudflare):",
+    "in your parent domain (${var.domain}) DNS provider (e.g., Cloudflare, GoDaddy, Namecheap):",
+    "",
+    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "NS RECORDS TO ADD IN PARENT DOMAIN (${var.domain}):",
+    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
     "",
     "Type: NS",
-    "Name: ${var.environment}",
+    "Name/Host: ${var.environment}",
     "TTL: 3600 (or Auto)",
-    "Values:",
-    join("\n", [for ns in aws_route53_zone.main[0].name_servers : "  - ${ns}"]),
+    "Values/Content:",
+    join("\n", [for i, ns in aws_route53_zone.public[0].name_servers : "  ${i + 1}. ${ns}"]),
     "",
-    "Important:",
-    "- Add ALL ${length(aws_route53_zone.main[0].name_servers)} NS records listed above",
-    "- Set Proxy status to \"DNS only\" (disable Cloudflare proxy if using Cloudflare)",
-    "- DNS propagation may take up to 48 hours",
+    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "CLOUDFLARE INSTRUCTIONS:",
+    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "1. Go to Cloudflare Dashboard → DNS → Records",
+    "2. Click 'Add record'",
+    "3. Select Type: NS",
+    "4. Name: ${var.environment}",
+    "5. Content: Add each name server (one per record, or comma-separated if supported)",
+    "6. TTL: Auto (or 3600)",
+    "7. Proxy status: DNS only (⚠️ IMPORTANT: Disable Cloudflare proxy)",
+    "8. Click 'Save'",
     "",
+    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "GODADDY INSTRUCTIONS:",
+    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "1. Go to GoDaddy DNS Management",
+    "2. Click 'Add' to create a new record",
+    "3. Type: NS",
+    "4. Host: ${var.environment}",
+    "5. Points to: Add each name server (create separate records for each)",
+    "6. TTL: 1 hour",
+    "7. Click 'Save'",
+    "",
+    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "NAMECHEAP INSTRUCTIONS:",
+    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "1. Go to Namecheap Domain List → Manage → Advanced DNS",
+    "2. Click 'Add New Record'",
+    "3. Type: NS Record",
+    "4. Host: ${var.environment}",
+    "5. Value: Add each name server (one per record)",
+    "6. TTL: Automatic (or 3600)",
+    "7. Click 'Save'",
+    "",
+    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "IMPORTANT NOTES:",
+    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "⚠️  Add ALL ${length(aws_route53_zone.public[0].name_servers)} NS records listed above",
+    "⚠️  If using Cloudflare, set Proxy status to 'DNS only' (disable proxy)",
+    "⚠️  DNS propagation may take up to 48 hours",
+    "⚠️  Do NOT delete existing NS records until new ones are verified",
+    "",
+    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "VERIFICATION:",
+    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
     "After adding NS records, verify with:",
-    "dig NS ${var.environment}.${var.domain} +short"
+    "  dig NS ${var.environment}.${var.domain} +short",
+    "",
+    "Expected output should show all ${length(aws_route53_zone.public[0].name_servers)} name servers:",
+    join("\n", [for ns in aws_route53_zone.public[0].name_servers : "  ${ns}"]),
+    "",
+    "Full verification:",
+    "  dig NS ${var.environment}.${var.domain}",
+    "",
+    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
   ]) : null
 }
 
 output "hosted_zone_arn" {
   description = "ARN of the Route 53 hosted zone"
-  value       = var.domain != null ? aws_route53_zone.main[0].arn : null
+  value       = var.domain != null ? aws_route53_zone.public[0].arn : null
 }
 
 output "acm_certificate_arn" {
@@ -647,44 +731,64 @@ output "acm_certificate_arn" {
   value       = var.domain != null ? aws_acm_certificate.environment[0].arn : null
 }
 
+output "acm_certificate_id" {
+  description = "ID of the ACM certificate (certificate ARN without the 'arn:aws:acm:region:account:certificate/' prefix)"
+  value       = var.domain != null ? aws_acm_certificate.environment[0].id : null
+}
+
 output "acm_certificate_domain_name" {
   description = "Domain name of the ACM certificate"
   value       = var.domain != null ? aws_acm_certificate.environment[0].domain_name : null
 }
 
+output "acm_certificate_subject_alternative_names" {
+  description = "List of subject alternative names (SANs) for the ACM certificate"
+  value       = var.domain != null ? aws_acm_certificate.environment[0].subject_alternative_names : []
+}
+
+output "acm_certificate_validation_method" {
+  description = "Validation method used for the ACM certificate (DNS or EMAIL)"
+  value       = var.domain != null ? aws_acm_certificate.environment[0].validation_method : null
+}
+
 output "acm_certificate_status" {
-  description = "Status of the ACM certificate validation"
+  description = "Status of the ACM certificate validation (certificate ARN if validated, null otherwise)"
   value       = var.domain != null ? aws_acm_certificate_validation.environment[0].id : null
 }
 
+output "acm_certificate_validation_record_fqdns" {
+  description = "List of FQDNs for DNS validation records"
+  value       = var.domain != null ? [for record in aws_route53_record.certificate_validation : record.fqdn] : []
+}
+
 output "private_hosted_zone_id" {
-  description = "ID of the Route 53 private hosted zone (private-production.mini-verse.org)"
-  value       = var.environment == "production" && var.domain != null ? aws_route53_zone.private[0].zone_id : null
+  description = "ID of the Route 53 private hosted zone ({environment}.{domain}) for internal services like Redis, Database, etc. Uses the same domain as public hosted zone. Automatically created when domain is specified."
+  value       = var.domain != null ? aws_route53_zone.private[0].zone_id : null
 }
 
 output "private_hosted_zone_name" {
-  description = "Name of the Route 53 private hosted zone (private-production.mini-verse.org)"
-  value       = var.environment == "production" && var.domain != null ? aws_route53_zone.private[0].name : null
+  description = "Name of the Route 53 private hosted zone ({environment}.{domain}) for internal services. Uses the same domain as public hosted zone. Automatically created when domain is specified."
+  value       = var.domain != null ? aws_route53_zone.private[0].name : null
 }
 
 output "private_hosted_zone_arn" {
-  description = "ARN of the Route 53 private hosted zone (private-production.mini-verse.org)"
-  value       = var.environment == "production" && var.domain != null ? aws_route53_zone.private[0].arn : null
+  description = "ARN of the Route 53 private hosted zone ({environment}.{domain}) for internal services. Automatically created when domain is specified."
+  value       = var.domain != null ? aws_route53_zone.private[0].arn : null
 }
 
 output "private_hosted_zone_name_servers" {
-  description = "Name servers for the Route 53 private hosted zone (private-production.mini-verse.org)"
-  value       = var.environment == "production" && var.domain != null ? aws_route53_zone.private[0].name_servers : null
+  description = "Name servers for the Route 53 private hosted zone ({environment}.{domain}) for internal services. Automatically created when domain is specified."
+  value       = var.domain != null ? aws_route53_zone.private[0].name_servers : null
 }
 
 # Route53 Zone IDs Map
 output "route53_zone_ids_map" {
-  description = "Map of Route53 hosted zone IDs by name (format: {name => zone_id})"
+  description = "Map of Route53 hosted zone IDs by name (format: {name => zone_id}). Includes both public and private hosted zones when domain is specified."
   value = merge(
     var.domain != null ? {
-      "${aws_route53_zone.main[0].name}" = aws_route53_zone.main[0].zone_id
+      "${aws_route53_zone.public[0].name}" = aws_route53_zone.public[0].zone_id
     } : {},
-    var.environment == "production" && var.domain != null ? {
+    var.domain != null ? {
       "${aws_route53_zone.private[0].name}" = aws_route53_zone.private[0].zone_id
     } : {}
   )
@@ -692,12 +796,12 @@ output "route53_zone_ids_map" {
 
 # Route53 Zone ARNs Map
 output "route53_zone_arns_map" {
-  description = "Map of Route53 hosted zone ARNs by name (format: {name => arn})"
+  description = "Map of Route53 hosted zone ARNs by name (format: {name => arn}). Includes both public and private hosted zones when domain is specified."
   value = merge(
     var.domain != null ? {
-      "${aws_route53_zone.main[0].name}" = aws_route53_zone.main[0].arn
+      "${aws_route53_zone.public[0].name}" = aws_route53_zone.public[0].arn
     } : {},
-    var.environment == "production" && var.domain != null ? {
+    var.domain != null ? {
       "${aws_route53_zone.private[0].name}" = aws_route53_zone.private[0].arn
     } : {}
   )
@@ -705,12 +809,12 @@ output "route53_zone_arns_map" {
 
 # Route53 Zone Name Servers Map
 output "route53_zone_name_servers_map" {
-  description = "Map of Route53 hosted zone name servers by name (format: {name => [name_servers]})"
+  description = "Map of Route53 hosted zone name servers by name (format: {name => [name_servers]}). Includes both public and private hosted zones when domain is specified."
   value = merge(
     var.domain != null ? {
-      "${aws_route53_zone.main[0].name}" = aws_route53_zone.main[0].name_servers
+      "${aws_route53_zone.public[0].name}" = aws_route53_zone.public[0].name_servers
     } : {},
-    var.environment == "production" && var.domain != null ? {
+    var.domain != null ? {
       "${aws_route53_zone.private[0].name}" = aws_route53_zone.private[0].name_servers
     } : {}
   )
@@ -773,7 +877,7 @@ data "terraform_remote_state" "vpc" {
   workspace = terraform.workspace
 
   config = {
-    bucket               = "your-terraform-state-bucket"  # Replace with your actual bucket name
+    bucket               = "terraform-aws-modules-example-state"  # Replace with your actual bucket name
     key                  = "hanyouqing/terraform-aws-modules:vpc/examples/basic/terraform.tfstate"  # Replace with your actual state key
     region               = "us-east-1"  # Replace with your actual region
     workspace_key_prefix = "env:"

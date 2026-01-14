@@ -12,7 +12,8 @@ A production-ready Terraform module for creating AWS VPCs with public, private, 
 - ✅ Managed Prefix List for allowlist (IPv4 and IPv6)
 - ✅ Security groups (jump, public, private, database, VPC endpoints)
 - ✅ VPC Endpoints (ECR, EKS, CloudWatch Logs, Secrets Manager, S3)
-- ✅ Route 53 hosted zone (optional)
+- ✅ Route 53 hosted zone (optional, automatically creates both public and private zones when domain is specified)
+- ✅ Private Route 53 hosted zone automatically associated with VPC (for internal services like Redis, Database, etc.)
 - ✅ ACM certificate (optional, requires domain)
 - ✅ Cost-optimized for non-production environments
 
@@ -122,7 +123,7 @@ See the [examples](./examples/) directory for ready-to-use configurations:
 | single_nat_gateway | Use single NAT Gateway for cost optimization | `bool` | `false` | no |
 | enable_flow_log | Enable VPC Flow Logs | `bool` | `true` | no |
 | allowlist_ipv4_blocks | List of IPv4 CIDR blocks for Managed Prefix List | `list(object)` | `[]` | no |
-| domain | Base domain name for Route 53 hosted zone | `string` | `null` | no |
+| domain | Base domain name (e.g., example.com). When specified, creates both public and private Route53 hosted zones for {environment}.{domain}. The private hosted zone is automatically associated with the VPC. | `string` | `null` | no |
 | enable_vpc_endpoints | Enable VPC endpoints | `bool` | `true` | no |
 | tags | Additional tags to apply to all resources | `map(string)` | `{}` | no |
 
@@ -166,13 +167,27 @@ See [variables.tf](./variables.tf) for the complete list of available variables.
 | hosted_zone_id | ID of the Route 53 hosted zone (if domain is set) |
 | hosted_zone_name | Name of the Route 53 hosted zone (if domain is set) |
 | hosted_zone_arn | ARN of the Route 53 hosted zone (if domain is set) |
-| private_hosted_zone_id | ID of the Route 53 private hosted zone (production only, if domain is set) |
-| private_hosted_zone_name | Name of the Route 53 private hosted zone (production only, if domain is set) |
-| private_hosted_zone_arn | ARN of the Route 53 private hosted zone (production only, if domain is set) |
+| hosted_zone_name_servers | Name servers for the Route 53 hosted zone (if domain is set) |
+| hosted_zone_name_servers_list | List of name servers for easy copy-paste (if domain is set) |
+| hosted_zone_ns_records | NS records formatted for DNS providers (if domain is set) |
+| hosted_zone_ns_records_formatted | NS records in formatted string for easy copy-paste (if domain is set) |
+| hosted_zone_ns_records_cloudflare | NS records formatted for Cloudflare DNS in JSON format (if domain is set) |
+| hosted_zone_ns_records_list | List of NS record values (name servers) for programmatic use (if domain is set) |
+| hosted_zone_delegation_instructions | Detailed instructions for delegating subdomain to Route53 (if domain is set) |
+| private_hosted_zone_id | ID of the Route 53 private hosted zone for internal services (automatically created when domain is specified). Uses the same domain as public hosted zone. |
+| private_hosted_zone_name | Name of the Route 53 private hosted zone ({environment}.{domain}, same as public hosted zone) |
+| private_hosted_zone_arn | ARN of the Route 53 private hosted zone for internal services |
+| private_hosted_zone_name_servers | Name servers for the Route 53 private hosted zone (for internal services) |
 | route53_zone_ids_map | Map of Route53 hosted zone IDs by name (format: {name => zone_id}) |
 | route53_zone_arns_map | Map of Route53 hosted zone ARNs by name (format: {name => arn}) |
 | route53_zone_name_servers_map | Map of Route53 hosted zone name servers by name (format: {name => [name_servers]}) |
 | acm_certificate_arn | ARN of the ACM certificate (if domain is set) |
+| acm_certificate_id | ID of the ACM certificate (if domain is set) |
+| acm_certificate_domain_name | Domain name of the ACM certificate (if domain is set) |
+| acm_certificate_subject_alternative_names | List of subject alternative names (SANs) for the ACM certificate (if domain is set) |
+| acm_certificate_validation_method | Validation method used for the ACM certificate (if domain is set) |
+| acm_certificate_status | Status of the ACM certificate validation (if domain is set) |
+| acm_certificate_validation_record_fqdns | List of FQDNs for DNS validation records (if domain is set) |
 
 See [outputs.tf](./outputs.tf) for the complete list of available outputs.
 
@@ -336,6 +351,57 @@ module "rds" {
 }
 ```
 
+### Using Private Hosted Zone for Internal Services
+
+When you specify the `domain` variable, the module automatically creates both public and private Route53 hosted zones using the same domain (`{environment}.{domain}`). The private hosted zone is automatically associated with the VPC and allows you to create CNAME or ALIAS records for internal services like Redis, RDS, ElastiCache, etc. within the same domain namespace.
+
+**Note**: Private and public hosted zones use the same domain name but are separate zones. The private zone is only accessible within the VPC, while the public zone is accessible from the internet.
+
+```hcl
+module "vpc" {
+  source = "path/to/vpc"
+  
+  project     = "my-project"
+  environment = "production"
+  domain      = "example.com"
+  
+  # Both public and private hosted zones are automatically created
+  # Private hosted zone is automatically associated with the VPC
+}
+
+# Example: Create CNAME record for Redis cluster
+resource "aws_route53_record" "redis" {
+  zone_id = module.vpc.private_hosted_zone_id
+  name    = "redis"
+  type    = "CNAME"
+  ttl     = 300
+  records = [aws_elasticache_replication_group.main.configuration_endpoint_address]
+}
+
+# Example: Create ALIAS record for RDS database
+resource "aws_route53_record" "database" {
+  zone_id = module.vpc.private_hosted_zone_id
+  name    = "database"
+  type    = "CNAME"
+  ttl     = 300
+  records = [aws_db_instance.main.endpoint]
+}
+
+# Example: Create CNAME record for ElastiCache
+resource "aws_route53_record" "cache" {
+  zone_id = module.vpc.private_hosted_zone_id
+  name    = "cache"
+  type    = "CNAME"
+  ttl     = 300
+  records = [aws_elasticache_cluster.main.cache_nodes[0].address]
+}
+```
+
+After creating these records, you can access services using friendly names (within the VPC):
+- `redis.production.example.com`
+- `database.production.example.com`
+- `cache.production.example.com`
+
 ## Post-Deployment Tasks
 
 1. **Update EKS Cluster** (if applicable):
@@ -343,9 +409,140 @@ module "rds" {
 
 2. **Configure DNS** (if using domain):
    - Add NS records from `hosted_zone_name_servers` output to parent domain
+   - See `hosted_zone_delegation_instructions` output for detailed steps
+   - Use `hosted_zone_ns_records_formatted` for easy copy-paste
+   - See [DNS Delegation](#dns-delegation) section below for detailed instructions
 
 3. **Update Security Groups**:
    - Reference security group IDs in other resources (EC2, RDS, EKS, etc.)
+
+## DNS Delegation
+
+When using the `domain` variable, the module creates a Route53 hosted zone for `${environment}.${domain}` (e.g., `production.example.com`). To make this work, you need to delegate DNS management to Route53 by adding NS records in your parent domain's DNS provider.
+
+### Quick Start
+
+After deploying the VPC module, run:
+
+```bash
+# View formatted NS records
+terraform output hosted_zone_ns_records_formatted
+
+# View detailed instructions
+terraform output hosted_zone_delegation_instructions
+
+# View NS records list (for programmatic use)
+terraform output hosted_zone_ns_records_list
+```
+
+### Using NS Records Outputs
+
+The module provides multiple formats for NS records to suit different use cases:
+
+1. **Formatted String** (`hosted_zone_ns_records_formatted`):
+   ```bash
+   terraform output hosted_zone_ns_records_formatted
+   ```
+   Outputs a formatted string ready for copy-paste.
+
+2. **Cloudflare JSON** (`hosted_zone_ns_records_cloudflare`):
+   ```bash
+   terraform output hosted_zone_ns_records_cloudflare
+   ```
+   Outputs JSON format specifically for Cloudflare API.
+
+3. **List Format** (`hosted_zone_ns_records_list`):
+   ```bash
+   terraform output hosted_zone_ns_records_list
+   ```
+   Outputs a simple list of name servers for programmatic use.
+
+4. **Object Format** (`hosted_zone_ns_records`):
+   ```bash
+   terraform output hosted_zone_ns_records
+   ```
+   Outputs an object with type, name, TTL, and values.
+
+### Cloudflare Instructions
+
+1. Go to Cloudflare Dashboard → DNS → Records
+2. Click "Add record"
+3. Select Type: **NS**
+4. Name: `{environment}` (e.g., `production`)
+5. Content: Add each name server (one per record, or comma-separated if supported)
+6. TTL: Auto (or 3600)
+7. **⚠️ IMPORTANT**: Set Proxy status to **DNS only** (disable Cloudflare proxy)
+8. Click "Save"
+9. Repeat for all name servers (typically 4 NS records)
+
+### GoDaddy Instructions
+
+1. Go to GoDaddy DNS Management
+2. Click "Add" to create a new record
+3. Type: **NS**
+4. Host: `{environment}` (e.g., `production`)
+5. Points to: Add each name server (create separate records for each)
+6. TTL: 1 hour
+7. Click "Save"
+8. Repeat for all name servers
+
+### Namecheap Instructions
+
+1. Go to Namecheap Domain List → Manage → Advanced DNS
+2. Click "Add New Record"
+3. Type: **NS Record**
+4. Host: `{environment}` (e.g., `production`)
+5. Value: Add each name server (one per record)
+6. TTL: Automatic (or 3600)
+7. Click "Save"
+8. Repeat for all name servers
+
+### Verification
+
+After adding NS records, verify with:
+
+```bash
+# Quick check
+dig NS ${environment}.${domain} +short
+
+# Full verification
+dig NS ${environment}.${domain}
+
+# Expected output should show all name servers from hosted_zone_name_servers
+```
+
+### Important Notes
+
+- ⚠️ **Add ALL NS records**: Route53 typically provides 4 name servers - add all of them
+- ⚠️ **DNS Propagation**: Changes may take up to 48 hours to propagate globally
+- ⚠️ **Cloudflare Proxy**: If using Cloudflare, set Proxy status to "DNS only" for NS records
+- ⚠️ **Do NOT delete existing NS records** until new ones are verified and working
+- ⚠️ **Parent Domain**: Add NS records in the parent domain (e.g., `example.com`), not the subdomain
+
+### Using from Remote State
+
+Other projects can reference NS records from VPC remote state:
+
+```hcl
+data "terraform_remote_state" "vpc" {
+  backend = "s3"
+  # ... config ...
+}
+
+# Get NS records
+locals {
+  ns_records = data.terraform_remote_state.vpc.outputs.hosted_zone_ns_records_list
+}
+
+# Use in other resources
+output "dns_delegation_info" {
+  value = {
+    subdomain = data.terraform_remote_state.vpc.outputs.domain_name
+    ns_records = data.terraform_remote_state.vpc.outputs.hosted_zone_ns_records_list
+    instructions = data.terraform_remote_state.vpc.outputs.hosted_zone_delegation_instructions
+  }
+}
+```
 
 ## Troubleshooting
 

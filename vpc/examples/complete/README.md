@@ -191,10 +191,28 @@ module "eks" {
 After deployment, add NS records in your parent domain DNS provider:
 
 ```bash
-terraform output hosted_zone_name_servers_list
+# View formatted NS records (easy copy-paste)
+terraform output hosted_zone_ns_records_formatted
+
+# View detailed instructions for various DNS providers
+terraform output hosted_zone_delegation_instructions
+
+# View NS records list (for programmatic use)
+terraform output hosted_zone_ns_records_list
+
+# View NS records object (structured format)
+terraform output hosted_zone_ns_records
 ```
 
-Add these NS records to your parent domain (e.g., in Cloudflare or Route 53).
+**Quick Steps**:
+1. Run `terraform output hosted_zone_ns_records_formatted` to get formatted NS records
+2. Copy the NS records
+3. Add them to your parent domain DNS provider (Cloudflare, GoDaddy, Namecheap, etc.)
+4. Set Proxy status to "DNS only" if using Cloudflare
+5. Wait for DNS propagation (up to 48 hours)
+6. Verify with: `dig NS ${environment}.${domain} +short`
+
+See the main VPC module README for detailed instructions for each DNS provider.
 
 ### 3. Update Security Groups
 

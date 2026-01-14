@@ -273,7 +273,7 @@ variable "enable_ipv6_security_group_rules" {
 }
 
 variable "domain" {
-  description = "Base domain name (e.g., example.com). The hosted zone will be created as {environment}.{domain}"
+  description = "Base domain name (e.g., example.com). When specified, creates both public and private Route53 hosted zones for {environment}.{domain}. The private hosted zone is automatically associated with the VPC."
   type        = string
   default     = null
 }

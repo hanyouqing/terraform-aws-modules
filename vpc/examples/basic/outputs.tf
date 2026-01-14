@@ -89,6 +89,109 @@ output "security_group_ids_map" {
   value       = module.vpc.security_group_ids_map
 }
 
+# Route53 and ACM Certificate Outputs
+output "hosted_zone_id" {
+  description = "ID of the Route 53 hosted zone"
+  value       = module.vpc.hosted_zone_id
+}
+
+output "hosted_zone_name" {
+  description = "Name of the Route 53 hosted zone"
+  value       = module.vpc.hosted_zone_name
+}
+
+output "hosted_zone_arn" {
+  description = "ARN of the Route 53 hosted zone"
+  value       = module.vpc.hosted_zone_arn
+}
+
+output "base_domain" {
+  description = "Base domain name (e.g., example.com)"
+  value       = module.vpc.base_domain
+}
+
+output "domain_name" {
+  description = "Full domain name for the environment (e.g., production.example.com)"
+  value       = module.vpc.domain_name
+}
+
+output "acm_certificate_arn" {
+  description = "ARN of the ACM certificate for the environment domain"
+  value       = module.vpc.acm_certificate_arn
+}
+
+output "acm_certificate_id" {
+  description = "ID of the ACM certificate"
+  value       = module.vpc.acm_certificate_id
+}
+
+output "acm_certificate_domain_name" {
+  description = "Domain name of the ACM certificate"
+  value       = module.vpc.acm_certificate_domain_name
+}
+
+output "acm_certificate_subject_alternative_names" {
+  description = "List of subject alternative names (SANs) for the ACM certificate"
+  value       = module.vpc.acm_certificate_subject_alternative_names
+}
+
+output "acm_certificate_status" {
+  description = "Status of the ACM certificate validation"
+  value       = module.vpc.acm_certificate_status
+}
+
+# Route53 NS Records Outputs (for DNS delegation)
+output "hosted_zone_name_servers" {
+  description = "Name servers for the Route 53 hosted zone (use these to configure NS records in parent domain)"
+  value       = module.vpc.hosted_zone_name_servers
+}
+
+output "hosted_zone_name_servers_list" {
+  description = "List of name servers for easy copy-paste (one per line)"
+  value       = module.vpc.hosted_zone_name_servers_list
+}
+
+output "hosted_zone_ns_records" {
+  description = "NS records formatted for DNS providers (e.g., Cloudflare). Add these NS records in the parent domain."
+  value       = module.vpc.hosted_zone_ns_records
+}
+
+output "hosted_zone_ns_records_formatted" {
+  description = "NS records in a formatted string for easy copy-paste to DNS providers"
+  value       = module.vpc.hosted_zone_ns_records_formatted
+}
+
+output "hosted_zone_ns_records_cloudflare" {
+  description = "NS records formatted specifically for Cloudflare DNS (JSON format)"
+  value       = module.vpc.hosted_zone_ns_records_cloudflare
+}
+
+output "hosted_zone_ns_records_list" {
+  description = "List of NS record values (name servers) for programmatic use"
+  value       = module.vpc.hosted_zone_ns_records_list
+}
+
+output "hosted_zone_delegation_instructions" {
+  description = "Detailed instructions for delegating the subdomain to Route53 in various DNS providers"
+  value       = module.vpc.hosted_zone_delegation_instructions
+}
+
+# Private Route53 Hosted Zone Outputs (for internal services like Redis, Database, etc.)
+output "private_hosted_zone_id" {
+  description = "ID of the Route 53 private hosted zone for internal services"
+  value       = module.vpc.private_hosted_zone_id
+}
+
+output "private_hosted_zone_name" {
+  description = "Name of the Route 53 private hosted zone for internal services"
+  value       = module.vpc.private_hosted_zone_name
+}
+
+output "private_hosted_zone_arn" {
+  description = "ARN of the Route 53 private hosted zone for internal services"
+  value       = module.vpc.private_hosted_zone_arn
+}
+
 # Reminder outputs (zzz_ prefix ensures they appear last)
 output "zzz_allowlist_update_reminder" {
   description = "⚠️ REMINDER: Important tasks after VPC deployment"

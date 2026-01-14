@@ -75,6 +75,12 @@ variable "enable_vpc_endpoints" {
   default     = false
 }
 
+variable "domain" {
+  description = "Base domain name for Route 53 hosted zone (e.g., aws.hanyouqing.com)"
+  type        = string
+  default     = null
+}
+
 variable "tags" {
   description = "Additional tags to apply to all resources"
   type        = map(string)

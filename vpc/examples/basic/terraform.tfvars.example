@@ -22,6 +22,9 @@ single_nat_gateway  = true   # Only used if enable_nat_gateway = true
 enable_flow_log     = false  # Set to true if you need network monitoring
 enable_vpc_endpoints = false # Set to true if you need VPC endpoints (S3, DynamoDB, etc.)
 
+# Domain Configuration
+domain = "aws.hanyouqing.com"  # Base domain for Route 53 hosted zone
+
 # Optional: Additional tags
 tags = {
   ManagedBy = "terraform"

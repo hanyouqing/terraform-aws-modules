@@ -17,6 +17,8 @@ single_nat_gateway = true
 enable_flow_log      = false
 enable_vpc_endpoints = false
 
+domain = "aws.hanyouqing.com"
+
 tags = {
   Owner      = "DevOps"
   CostCenter = "Infrastructure"

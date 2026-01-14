@@ -146,3 +146,17 @@ module "eks" {
 }
 ```
 
+### DNS Configuration (if using domain)
+
+If you configured the `domain` variable, you'll need to delegate DNS to Route53:
+
+```bash
+# View NS records for DNS delegation
+terraform output hosted_zone_ns_records_formatted
+
+# View detailed instructions
+terraform output hosted_zone_delegation_instructions
+```
+
+Add the NS records to your parent domain's DNS provider (Cloudflare, GoDaddy, etc.) to complete DNS delegation.
+

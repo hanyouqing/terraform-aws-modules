@@ -1339,7 +1339,7 @@ data "terraform_remote_state" "vpc" {
   workspace = terraform.workspace
 
   config = {
-    bucket               = "your-terraform-state-bucket"  # Replace with your actual bucket name
+    bucket               = "terraform-aws-modules-example-state"  # Replace with your actual bucket name
     key                  = "hanyouqing/terraform-aws-modules:vpc/examples/basic/terraform.tfstate"  # Replace with your actual state key
     region               = "us-east-1"  # Replace with your actual region
     workspace_key_prefix = "env:"
@@ -1608,4 +1608,142 @@ database_subnet_group_id  = data.terraform_remote_state.vpc.outputs.database_sub
 Last Applied: 2026-01-14T02:18:38Z by arn:aws:iam::1233345345345:root
 
 EOT
+```
+
+Add domain & certificate
+
+```bash
+Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # module.vpc.aws_acm_certificate.environment[0] will be created
+  + resource "aws_acm_certificate" "environment" {
+      + arn                       = (known after apply)
+      + domain_name               = "development.aws.hanyouqing.com"
+      + domain_validation_options = [
+          + {
+              + domain_name           = "*.development.aws.hanyouqing.com"
+              + resource_record_name  = (known after apply)
+              + resource_record_type  = (known after apply)
+              + resource_record_value = (known after apply)
+            },
+          + {
+              + domain_name           = "development.aws.hanyouqing.com"
+              + resource_record_name  = (known after apply)
+              + resource_record_type  = (known after apply)
+              + resource_record_value = (known after apply)
+            },
+        ]
+      + id                        = (known after apply)
+      + key_algorithm             = (known after apply)
+      + not_after                 = (known after apply)
+      + not_before                = (known after apply)
+      + pending_renewal           = (known after apply)
+      + region                    = "us-east-1"
+      + renewal_eligibility       = (known after apply)
+      + renewal_summary           = (known after apply)
+      + status                    = (known after apply)
+      + subject_alternative_names = [
+          + "*.development.aws.hanyouqing.com",
+          + "development.aws.hanyouqing.com",
+        ]
+      + tags                      = {
+          + "Code"        = "hanyouqing/terraform-aws-modules:vpc/examples/basic"
+          + "CostCenter"  = "Infrastructure"
+          + "Environment" = "development"
+          + "ManagedBy"   = "terraform"
+          + "Name"        = "vpc-basic-development-certificate"
+          + "Owner"       = "DevOps"
+          + "Project"     = "vpc-basic"
+          + "Type"        = "acm-certificate"
+        }
+      + tags_all                  = {
+          + "Code"        = "hanyouqing/terraform-aws-modules:vpc/examples/basic"
+          + "CostCenter"  = "Infrastructure"
+          + "Environment" = "development"
+          + "ManagedBy"   = "terraform"
+          + "Name"        = "vpc-basic-development-certificate"
+          + "Owner"       = "DevOps"
+          + "Project"     = "vpc-basic"
+          + "Type"        = "acm-certificate"
+        }
+      + type                      = (known after apply)
+      + validation_emails         = (known after apply)
+      + validation_method         = "DNS"
+
+      + options (known after apply)
+    }
+
+  # module.vpc.aws_acm_certificate_validation.environment[0] will be created
+  + resource "aws_acm_certificate_validation" "environment" {
+      + certificate_arn         = (known after apply)
+      + id                      = (known after apply)
+      + region                  = "us-east-1"
+      + validation_record_fqdns = (known after apply)
+
+      + timeouts {
+          + create = "5m"
+        }
+    }
+
+  # module.vpc.aws_route53_record.certificate_validation["*.development.aws.hanyouqing.com"] will be created
+  + resource "aws_route53_record" "certificate_validation" {
+      + allow_overwrite = true
+      + fqdn            = (known after apply)
+      + id              = (known after apply)
+      + name            = (known after apply)
+      + records         = (known after apply)
+      + ttl             = 60
+      + type            = (known after apply)
+      + zone_id         = (known after apply)
+    }
+
+  # module.vpc.aws_route53_record.certificate_validation["development.aws.hanyouqing.com"] will be created
+  + resource "aws_route53_record" "certificate_validation" {
+      + allow_overwrite = true
+      + fqdn            = (known after apply)
+      + id              = (known after apply)
+      + name            = (known after apply)
+      + records         = (known after apply)
+      + ttl             = 60
+      + type            = (known after apply)
+      + zone_id         = (known after apply)
+    }
+
+  # module.vpc.aws_route53_zone.main[0] will be created
+  + resource "aws_route53_zone" "main" {
+      + arn                         = (known after apply)
+      + comment                     = "Hosted zone for development environment"
+      + enable_accelerated_recovery = (known after apply)
+      + force_destroy               = false
+      + id                          = (known after apply)
+      + name                        = "development.aws.hanyouqing.com"
+      + name_servers                = (known after apply)
+      + primary_name_server         = (known after apply)
+      + tags                        = {
+          + "Code"        = "hanyouqing/terraform-aws-modules:vpc/examples/basic"
+          + "CostCenter"  = "Infrastructure"
+          + "Environment" = "development"
+          + "ManagedBy"   = "terraform"
+          + "Name"        = "vpc-basic-development-hosted-zone"
+          + "Owner"       = "DevOps"
+          + "Project"     = "vpc-basic"
+          + "Type"        = "hosted-zone"
+        }
+      + tags_all                    = {
+          + "Code"        = "hanyouqing/terraform-aws-modules:vpc/examples/basic"
+          + "CostCenter"  = "Infrastructure"
+          + "Environment" = "development"
+          + "ManagedBy"   = "terraform"
+          + "Name"        = "vpc-basic-development-hosted-zone"
+          + "Owner"       = "DevOps"
+          + "Project"     = "vpc-basic"
+          + "Type"        = "hosted-zone"
+        }
+      + zone_id                     = (known after apply)
+    }
+
+Plan: 5 to add, 0 to change, 0 to destroy.
 ```
