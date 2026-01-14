@@ -14,7 +14,8 @@ database_subnets = ["10.0.21.0/24", "10.0.22.0/24", "10.0.23.0/24"]
 enable_nat_gateway = true
 single_nat_gateway = true
 
-enable_flow_log = false
+enable_flow_log      = false
+enable_vpc_endpoints = false
 
 tags = {
   Owner      = "DevOps"

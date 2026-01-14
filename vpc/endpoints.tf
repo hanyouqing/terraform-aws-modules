@@ -88,7 +88,7 @@ resource "aws_vpc_endpoint" "interface" {
   vpc_id              = aws_vpc.main.id
   service_name        = "com.amazonaws.${var.region}.${each.value.service_name}"
   vpc_endpoint_type   = "Interface"
-  subnet_ids          = aws_subnet.private[*].id
+  subnet_ids          = [for k, v in aws_subnet.private : v.id]
   security_group_ids  = var.enable_vpc_endpoints ? [aws_security_group.vpc_endpoints[0].id] : []
   private_dns_enabled = each.value.private_dns
   policy              = var.vpc_endpoint_policy_enabled && contains(keys(local.vpc_endpoint_policies), each.key) ? local.vpc_endpoint_policies[each.key] : null
@@ -113,8 +113,8 @@ resource "aws_vpc_endpoint" "gateway" {
   service_name      = "com.amazonaws.${var.region}.${each.value.service_name}"
   vpc_endpoint_type = "Gateway"
   route_table_ids = concat(
-    aws_route_table.private[*].id,
-    aws_route_table.database[*].id
+    [for k, v in aws_route_table.private : v.id],
+    [for k, v in aws_route_table.database : v.id]
   )
 
   tags = merge(

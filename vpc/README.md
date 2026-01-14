@@ -143,8 +143,11 @@ See [variables.tf](./variables.tf) for the complete list of available variables.
 | database_subnet_ids_map | Map of database subnet IDs by name (format: {name => id}) |
 | nat_gateway_ids | IDs of the NAT Gateways (list format) |
 | nat_gateway_ids_map | Map of NAT Gateway IDs by name (format: {name => id}) |
+| nat_public_ips | Public IPs of NAT Gateways (list format, for backward compatibility) |
 | nat_public_ips_map | Map of NAT Gateway public IPs by name (format: {name => public_ip}) |
+| nat_gateway_public_ips | Map of NAT Gateway public IPs by name (format: {name => public_ip}) |
 | internet_gateway_id | ID of the Internet Gateway |
+| internet_gateway_arn | ARN of the Internet Gateway |
 | allowlist_prefix_list_id_ipv4 | ID of the IPv4 Managed Prefix List for allowlist |
 | allowlist_prefix_list_arn_ipv4 | ARN of the IPv4 Managed Prefix List for allowlist |
 | allowlist_prefix_list_name_ipv4 | Name of the IPv4 Managed Prefix List for allowlist |
@@ -157,10 +160,8 @@ See [variables.tf](./variables.tf) for the complete list of available variables.
 | public_security_group_id | ID of the public security group |
 | private_security_group_id | ID of the private security group |
 | database_security_group_id | ID of the database security group |
-| security_group_jump_id | ID of the jump security group |
-| security_group_public_id | ID of the public security group |
-| security_group_private_id | ID of the private security group |
-| security_group_database_id | ID of the database security group |
+| security_group_ids | IDs of all security groups (list format, for backward compatibility) |
+| security_group_ids_map | Map of all security groups (format: {jump => id, public => id, private => id, database => id}) |
 | vpc_endpoints_security_group_id | ID of the VPC endpoints security group |
 | hosted_zone_id | ID of the Route 53 hosted zone (if domain is set) |
 | hosted_zone_name | Name of the Route 53 hosted zone (if domain is set) |

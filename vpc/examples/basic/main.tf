@@ -27,11 +27,12 @@ module "vpc" {
   private_subnets    = var.private_subnets
   database_subnets   = var.database_subnets
 
-  # Cost optimization: Disable NAT Gateway and Flow Logs by default for minimal cost
+  # Cost optimization: Disable NAT Gateway, Flow Logs, and VPC Endpoints by default for minimal cost
   enable_nat_gateway = var.enable_nat_gateway
   single_nat_gateway = var.single_nat_gateway
 
-  enable_flow_log = var.enable_flow_log
+  enable_flow_log      = var.enable_flow_log
+  enable_vpc_endpoints = var.enable_vpc_endpoints
 
   tags = var.tags
 }

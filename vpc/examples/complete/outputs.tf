@@ -38,6 +38,26 @@ output "internet_gateway_id" {
   value       = module.vpc.internet_gateway_id
 }
 
+output "internet_gateway_arn" {
+  description = "ARN of the Internet Gateway"
+  value       = module.vpc.internet_gateway_arn
+}
+
+output "nat_public_ips" {
+  description = "Public IPs of NAT Gateways (list format)"
+  value       = module.vpc.nat_public_ips
+}
+
+output "nat_public_ips_map" {
+  description = "Map of NAT Gateway public IPs by name"
+  value       = module.vpc.nat_public_ips_map
+}
+
+output "nat_gateway_public_ips" {
+  description = "Map of NAT Gateway public IPs by name (format: {name => public_ip})"
+  value       = module.vpc.nat_gateway_public_ips
+}
+
 output "allowlist_prefix_list_id_ipv4" {
   description = "ID of the IPv4 Managed Prefix List for allowlist"
   value       = module.vpc.allowlist_prefix_list_id_ipv4
@@ -119,24 +139,14 @@ output "nat_gateway_ids_map" {
   value       = module.vpc.nat_gateway_ids_map
 }
 
-output "security_group_jump_id" {
-  description = "ID of the jump security group"
-  value       = module.vpc.security_group_jump_id
+output "security_group_ids" {
+  description = "IDs of all security groups (list format, for backward compatibility)"
+  value       = module.vpc.security_group_ids
 }
 
-output "security_group_public_id" {
-  description = "ID of the public security group"
-  value       = module.vpc.security_group_public_id
-}
-
-output "security_group_private_id" {
-  description = "ID of the private security group"
-  value       = module.vpc.security_group_private_id
-}
-
-output "security_group_database_id" {
-  description = "ID of the database security group"
-  value       = module.vpc.security_group_database_id
+output "security_group_ids_map" {
+  description = "Map of all security groups (format: {jump => id, public => id, private => id, database => id})"
+  value       = module.vpc.security_group_ids_map
 }
 
 output "route53_zone_ids_map" {
@@ -152,5 +162,16 @@ output "route53_zone_arns_map" {
 output "route53_zone_name_servers_map" {
   description = "Map of Route53 hosted zone name servers by name"
   value       = module.vpc.route53_zone_name_servers_map
+}
+
+# Reminder outputs (zzz_ prefix ensures they appear last)
+output "zzz_allowlist_update_reminder" {
+  description = "⚠️ REMINDER: Important tasks after VPC deployment"
+  value       = module.vpc.zzz_allowlist_update_reminder
+}
+
+output "zzz_reminders" {
+  description = "📝 REMINDER: Complete examples for using VPC outputs in EC2, RDS, Redis, and other resources"
+  value       = module.vpc.zzz_reminders
 }
 

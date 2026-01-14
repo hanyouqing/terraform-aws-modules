@@ -15,13 +15,13 @@ output "vpc_cidr_block" {
 
 output "public_subnet_ids" {
   description = "IDs of the public subnets (list format, for backward compatibility)"
-  value       = aws_subnet.public[*].id
+  value       = [for k, v in aws_subnet.public : v.id]
 }
 
 output "public_subnet_ids_map" {
   description = "Map of public subnet IDs by name (format: {name => id})"
   value = {
-    for idx, subnet in aws_subnet.public : "${local.name}-public-${substr(var.availability_zones[idx], -1, 1)}" => subnet.id
+    for k, v in aws_subnet.public : k => v.id
   }
 }
 
@@ -32,13 +32,13 @@ output "public_subnet_cidrs" {
 
 output "private_subnet_ids" {
   description = "IDs of the private subnets (list format, for backward compatibility)"
-  value       = aws_subnet.private[*].id
+  value       = [for k, v in aws_subnet.private : v.id]
 }
 
 output "private_subnet_ids_map" {
   description = "Map of private subnet IDs by name (format: {name => id})"
   value = {
-    for idx, subnet in aws_subnet.private : "${local.name}-private-${substr(var.availability_zones[idx], -1, 1)}" => subnet.id
+    for k, v in aws_subnet.private : k => v.id
   }
 }
 
@@ -49,14 +49,14 @@ output "private_subnet_cidrs" {
 
 output "database_subnet_ids" {
   description = "IDs of the database subnets (list format, for backward compatibility)"
-  value       = aws_subnet.database[*].id
+  value       = [for k, v in aws_subnet.database : v.id]
 }
 
 output "database_subnet_ids_map" {
   description = "Map of database subnet IDs by name (format: {name => id})"
-  value = length(aws_subnet.database) > 0 ? {
-    for idx, subnet in aws_subnet.database : "${local.name}-database-${substr(var.availability_zones[idx], -1, 1)}" => subnet.id
-  } : {}
+  value = {
+    for k, v in aws_subnet.database : k => v.id
+  }
 }
 
 output "database_subnet_cidrs" {
@@ -71,31 +71,44 @@ output "database_subnet_group_id" {
 
 output "nat_gateway_ids" {
   description = "IDs of the NAT Gateways (list format, for backward compatibility)"
-  value       = aws_nat_gateway.main[*].id
+  value       = [for k, v in aws_nat_gateway.main : v.id]
 }
 
 output "nat_gateway_ids_map" {
   description = "Map of NAT Gateway IDs by name (format: {name => id})"
-  value = length(aws_nat_gateway.main) > 0 ? {
-    for idx, nat in aws_nat_gateway.main : "${local.name}-nat-${idx + 1}" => nat.id
-  } : {}
+  value = {
+    for k, v in aws_nat_gateway.main : k => v.id
+  }
 }
 
 output "nat_public_ips" {
   description = "Public IPs of the NAT Gateways (list format, for backward compatibility)"
-  value       = aws_eip.nat[*].public_ip
+  value       = [for k, v in aws_eip.nat : v.public_ip]
 }
 
 output "nat_public_ips_map" {
   description = "Map of NAT Gateway public IPs by name (format: {name => public_ip})"
-  value = length(aws_eip.nat) > 0 ? {
-    for idx, eip in aws_eip.nat : "${local.name}-nat-${idx + 1}" => eip.public_ip
-  } : {}
+  value = {
+    for k, v in aws_eip.nat : k => v.public_ip
+  }
 }
 
 output "internet_gateway_id" {
   description = "ID of the Internet Gateway"
   value       = aws_internet_gateway.main.id
+}
+
+output "internet_gateway_arn" {
+  description = "ARN of the Internet Gateway"
+  value       = aws_internet_gateway.main.arn
+}
+
+# NAT Gateway Public IPs (map format)
+output "nat_gateway_public_ips" {
+  description = "Map of NAT Gateway public IPs by name (format: {name => public_ip})"
+  value = {
+    for k, v in aws_eip.nat : k => v.public_ip
+  }
 }
 
 output "public_route_table_ids" {
@@ -105,12 +118,12 @@ output "public_route_table_ids" {
 
 output "private_route_table_ids" {
   description = "IDs of the private route tables"
-  value       = aws_route_table.private[*].id
+  value       = [for k, v in aws_route_table.private : v.id]
 }
 
 output "database_route_table_ids" {
   description = "IDs of the database route tables"
-  value       = aws_route_table.database[*].id
+  value       = [for k, v in aws_route_table.database : v.id]
 }
 
 output "vpc_flow_log_id" {
@@ -165,17 +178,17 @@ output "vpc_ipv6_association_id" {
 
 output "public_subnet_ipv6_cidr_blocks" {
   description = "IPv6 CIDR blocks of the public subnets"
-  value       = var.enable_ipv6 ? aws_subnet.public[*].ipv6_cidr_block : []
+  value       = var.enable_ipv6 ? [for k, v in aws_subnet.public : v.ipv6_cidr_block] : []
 }
 
 output "private_subnet_ipv6_cidr_blocks" {
   description = "IPv6 CIDR blocks of the private subnets"
-  value       = var.enable_ipv6 ? aws_subnet.private[*].ipv6_cidr_block : []
+  value       = var.enable_ipv6 ? [for k, v in aws_subnet.private : v.ipv6_cidr_block] : []
 }
 
 output "database_subnet_ipv6_cidr_blocks" {
   description = "IPv6 CIDR blocks of the database subnets"
-  value       = var.enable_ipv6 ? aws_subnet.database[*].ipv6_cidr_block : []
+  value       = var.enable_ipv6 ? [for k, v in aws_subnet.database : v.ipv6_cidr_block] : []
 }
 
 # VPC Peering Outputs
@@ -366,25 +379,26 @@ output "private_security_group_name" {
   value       = aws_security_group.private.name
 }
 
-# Security Group IDs (separate outputs)
-output "security_group_jump_id" {
-  description = "ID of the jump security group"
-  value       = aws_security_group.jump.id
+# Security Group IDs (list format, for backward compatibility)
+output "security_group_ids" {
+  description = "IDs of all security groups (list format, for backward compatibility)"
+  value = [
+    aws_security_group.jump.id,
+    aws_security_group.public.id,
+    aws_security_group.private.id,
+    aws_security_group.database.id
+  ]
 }
 
-output "security_group_public_id" {
-  description = "ID of the public security group"
-  value       = aws_security_group.public.id
-}
-
-output "security_group_private_id" {
-  description = "ID of the private security group"
-  value       = aws_security_group.private.id
-}
-
-output "security_group_database_id" {
-  description = "ID of the database security group"
-  value       = aws_security_group.database.id
+# Security Groups Map (format: {jump => id, public => id, private => id, database => id})
+output "security_group_ids_map" {
+  description = "Map of all security groups (format: {jump => id, public => id, private => id, database => id})"
+  value = {
+    jump     = aws_security_group.jump.id
+    public   = aws_security_group.public.id
+    private  = aws_security_group.private.id
+    database = aws_security_group.database.id
+  }
 }
 
 output "database_security_group_id" {
@@ -737,7 +751,295 @@ Pending Tasks:
    - Review and update any other resources that should use allowlist
    - Consider adding allowlist rules to VPC public security group if needed
 
-Applied at: ${timestamp()}
+Applied at: ${timestamp()} by ${local.caller_user_arn}
+EOT
+}
+
+output "zzz_reminders" {
+  description = "📝 REMINDER: Complete examples for using VPC outputs in EC2, RDS, Redis, and other resources"
+  value       = <<-EOT
+📝  REMINDER: Using VPC Remote State in Other Modules
+=======================================================
+
+This VPC module has been successfully deployed. Use the following examples to reference
+VPC outputs when creating EC2, RDS, Redis, and other resources.
+
+1. Remote State Configuration (data.tf or main.tf)
+---------------------------------------------------
+# Add this to your EC2, RDS, or Redis module's data.tf or main.tf
+
+data "terraform_remote_state" "vpc" {
+  backend   = "s3"
+  workspace = terraform.workspace
+
+  config = {
+    bucket               = "your-terraform-state-bucket"  # Replace with your actual bucket name
+    key                  = "hanyouqing/terraform-aws-modules:vpc/examples/basic/terraform.tfstate"  # Replace with your actual state key
+    region               = "us-east-1"  # Replace with your actual region
+    workspace_key_prefix = "env:"
+  }
+}
+
+# Variables needed (add to variables.tf):
+# variable "vpc_remote_state_bucket" {
+#   description = "S3 bucket name for VPC remote state"
+#   type        = string
+# }
+# 
+# variable "vpc_remote_state_key" {
+#   description = "Remote state key for VPC module"
+#   type        = string
+#   default     = "hanyouqing/terraform-aws-modules:vpc/examples/basic/terraform.tfstate"
+# }
+
+2. EC2 Instance Example
+------------------------
+# Example: Create EC2 instance in private subnet with security groups
+
+resource "aws_instance" "app" {
+  ami           = "ami-xxxxx"
+  instance_type = "t3.micro"
+  
+  # Use private subnet (by name)
+  # Note: Replace "your-project-development" with your actual VPC name
+  subnet_id = data.terraform_remote_state.vpc.outputs.private_subnet_ids_map["your-project-development-private-a"]
+  
+  # Use security groups (map format)
+  vpc_security_group_ids = [
+    data.terraform_remote_state.vpc.outputs.security_group_ids_map["private"],
+    data.terraform_remote_state.vpc.outputs.security_group_ids_map["jump"],  # For SSH access
+  ]
+  
+  # Alternative: Use list format
+  # vpc_security_group_ids = data.terraform_remote_state.vpc.outputs.security_group_ids
+  
+  tags = {
+    Name = "your-project-development-app"
+  }
+}
+
+# Alternative: Use subnet by index (list format)
+# subnet_id = data.terraform_remote_state.vpc.outputs.private_subnet_ids[0]
+
+3. RDS Database Example
+------------------------
+# Example: Create RDS instance in database subnets
+
+resource "aws_db_instance" "main" {
+  identifier     = "your-project-development-db"
+  engine         = "postgres"
+  engine_version = "15.4"
+  instance_class = "db.t3.micro"
+  
+  # Use database subnet group
+  db_subnet_group_name = data.terraform_remote_state.vpc.outputs.database_subnet_group_id
+  
+  # Use database security group (map format)
+  vpc_security_group_ids = [
+    data.terraform_remote_state.vpc.outputs.security_group_ids_map["database"]
+  ]
+  
+  # Alternative: Use list format
+  # vpc_security_group_ids = data.terraform_remote_state.vpc.outputs.security_group_ids
+  
+  # Allow access from private security group
+  # (configured via security group rules in VPC module)
+  
+  allocated_storage     = 20
+  storage_encrypted     = true
+  backup_retention_period = 7
+  
+  tags = {
+    Name = "your-project-development-db"
+  }
+}
+
+# Example: RDS with specific subnet (by name)
+# subnet_ids = [
+#   data.terraform_remote_state.vpc.outputs.database_subnet_ids_map["your-project-development-database-a"],
+#   data.terraform_remote_state.vpc.outputs.database_subnet_ids_map["your-project-development-database-b"]
+# ]
+
+4. ElastiCache (Redis) Example
+-------------------------------
+# Example: Create Redis cluster in private subnets
+
+resource "aws_elasticache_subnet_group" "main" {
+  name       = "your-project-development-redis-subnet-group"
+  subnet_ids = data.terraform_remote_state.vpc.outputs.private_subnet_ids
+}
+
+resource "aws_elasticache_replication_group" "main" {
+  replication_group_id       = "your-project-development-redis"
+  description                = "Redis cluster for your-project-development"
+  
+  node_type                  = "cache.t3.micro"
+  port                       = 6379
+  parameter_group_name       = "default.redis7"
+  
+  # Use subnet group
+  subnet_group_name = aws_elasticache_subnet_group.main.name
+  
+  # Use security groups (map format)
+  security_group_ids = [
+    data.terraform_remote_state.vpc.outputs.security_group_ids_map["private"]
+  ]
+  
+  # Alternative: Use list format
+  # security_group_ids = data.terraform_remote_state.vpc.outputs.security_group_ids
+  
+  num_cache_clusters = 2
+  
+  tags = {
+    Name = "your-project-development-redis"
+  }
+}
+
+5. Application Load Balancer (ALB) Example
+-------------------------------------------
+# Example: Create ALB in public subnets
+
+resource "aws_lb" "main" {
+  name               = "your-project-development-alb"
+  internal           = false
+  load_balancer_type = "application"
+  
+  # Use public subnets
+  subnets = data.terraform_remote_state.vpc.outputs.public_subnet_ids
+  
+  # Use security groups (map format)
+  security_groups = [
+    data.terraform_remote_state.vpc.outputs.security_group_ids_map["public"]
+  ]
+  
+  # Alternative: Use list format
+  # security_groups = data.terraform_remote_state.vpc.outputs.security_group_ids
+  
+  enable_deletion_protection = false
+  
+  tags = {
+    Name = "your-project-development-alb"
+  }
+}
+
+# Example: ALB with specific subnets (by name)
+# subnets = [
+#   data.terraform_remote_state.vpc.outputs.public_subnet_ids_map["your-project-development-public-a"],
+#   data.terraform_remote_state.vpc.outputs.public_subnet_ids_map["your-project-development-public-b"]
+# ]
+
+6. EKS Cluster Example
+------------------------
+# Example: Create EKS cluster using VPC outputs
+
+module "eks" {
+  source = "terraform-aws-modules/eks/aws"
+  
+  cluster_name    = "your-project-development-eks"
+  cluster_version = "1.28"
+  
+  # Use VPC outputs
+  vpc_id     = data.terraform_remote_state.vpc.outputs.vpc_id
+  subnet_ids = data.terraform_remote_state.vpc.outputs.private_subnet_ids
+  
+  # Use security groups
+  cluster_security_group_additional_rules = {
+    ingress_from_allowlist = {
+      type                     = "ingress"
+      from_port                = 443
+      to_port                  = 443
+      protocol                 = "tcp"
+      source_security_group_id = data.terraform_remote_state.vpc.outputs.security_group_ids_map["jump"]
+    }
+  }
+  
+  # Use allowlist prefix list for public access
+  cluster_endpoint_public_access_cidrs = [
+    data.terraform_remote_state.vpc.outputs.allowlist_prefix_list_id_ipv4
+  ]
+}
+
+7. VPC Endpoints Example
+-------------------------
+# Example: Create VPC endpoint in private subnets
+
+resource "aws_vpc_endpoint" "s3" {
+  vpc_id       = data.terraform_remote_state.vpc.outputs.vpc_id
+  service_name = "com.amazonaws.${var.region}.s3"
+  
+  # Use route tables
+  route_table_ids = concat(
+    data.terraform_remote_state.vpc.outputs.private_route_table_ids,
+    data.terraform_remote_state.vpc.outputs.database_route_table_ids
+  )
+  
+  tags = {
+    Name = "your-project-development-s3-endpoint"
+  }
+}
+
+8. Common VPC Outputs Reference
+---------------------------------
+# VPC Information
+vpc_id                    = data.terraform_remote_state.vpc.outputs.vpc_id
+vpc_cidr_block            = data.terraform_remote_state.vpc.outputs.vpc_cidr_block
+
+# Subnets (List Format - for backward compatibility)
+public_subnet_ids         = data.terraform_remote_state.vpc.outputs.public_subnet_ids
+private_subnet_ids        = data.terraform_remote_state.vpc.outputs.private_subnet_ids
+database_subnet_ids       = data.terraform_remote_state.vpc.outputs.database_subnet_ids
+
+# Subnets (Map Format - recommended, by name)
+public_subnet_ids_map     = data.terraform_remote_state.vpc.outputs.public_subnet_ids_map
+private_subnet_ids_map    = data.terraform_remote_state.vpc.outputs.private_subnet_ids_map
+database_subnet_ids_map   = data.terraform_remote_state.vpc.outputs.database_subnet_ids_map
+
+# Security Groups (List Format - for backward compatibility)
+security_group_ids        = data.terraform_remote_state.vpc.outputs.security_group_ids
+
+# Security Groups (Map Format - recommended)
+security_group_ids_map     = data.terraform_remote_state.vpc.outputs.security_group_ids_map
+# Access: security_group_ids_map["jump"], security_group_ids_map["public"], etc.
+
+# NAT Gateways
+nat_gateway_ids           = data.terraform_remote_state.vpc.outputs.nat_gateway_ids
+nat_gateway_ids_map       = data.terraform_remote_state.vpc.outputs.nat_gateway_ids_map
+
+# Route Tables
+private_route_table_ids   = data.terraform_remote_state.vpc.outputs.private_route_table_ids
+database_route_table_ids  = data.terraform_remote_state.vpc.outputs.database_route_table_ids
+
+# Allowlist Prefix Lists
+allowlist_prefix_list_id_ipv4 = data.terraform_remote_state.vpc.outputs.allowlist_prefix_list_id_ipv4
+allowlist_prefix_list_ids_map = data.terraform_remote_state.vpc.outputs.allowlist_prefix_list_ids_map
+
+# Route53 Zones (if domain is configured)
+hosted_zone_id            = data.terraform_remote_state.vpc.outputs.hosted_zone_id
+route53_zone_ids_map      = data.terraform_remote_state.vpc.outputs.route53_zone_ids_map
+
+# Database Subnet Group (for RDS)
+database_subnet_group_id  = data.terraform_remote_state.vpc.outputs.database_subnet_group_id
+
+9. Best Practices
+------------------
+- Use map format outputs (e.g., subnet_ids_map) for better readability and maintainability
+- Use security_group_ids_map for consistent security group references (recommended)
+- Use security_group_ids list format for backward compatibility
+- Always reference subnets by name when using map format for clarity
+- Use database_subnet_group_id for RDS instead of manually selecting subnets
+- Use allowlist_prefix_list_ids_map for consistent allowlist management
+
+10. Troubleshooting
+--------------------
+- If remote state is not found, verify:
+  * S3 bucket name matches vpc_remote_state_bucket
+  * State key matches vpc_remote_state_key
+  * Workspace matches (if using workspaces)
+  * Region matches
+- If outputs are null, ensure VPC module has been applied successfully
+- Use terraform state list to verify outputs are available
+
+Last Applied: ${timestamp()} by ${local.caller_user_arn}
 EOT
 }
 

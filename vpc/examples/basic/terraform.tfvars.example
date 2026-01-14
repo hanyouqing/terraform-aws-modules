@@ -17,9 +17,10 @@ private_subnets  = ["10.0.11.0/24", "10.0.12.0/24"]
 database_subnets = []  # Empty for minimal cost
 
 # Cost Optimization: Disabled by default for minimal cost
-enable_nat_gateway = false  # Set to true if private subnets need internet access
-single_nat_gateway = true   # Only used if enable_nat_gateway = true
-enable_flow_log    = false  # Set to true if you need network monitoring
+enable_nat_gateway  = false  # Set to true if private subnets need internet access
+single_nat_gateway  = true   # Only used if enable_nat_gateway = true
+enable_flow_log     = false  # Set to true if you need network monitoring
+enable_vpc_endpoints = false # Set to true if you need VPC endpoints (S3, DynamoDB, etc.)
 
 # Optional: Additional tags
 tags = {

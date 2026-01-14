@@ -69,6 +69,12 @@ variable "enable_flow_log" {
   default     = false
 }
 
+variable "enable_vpc_endpoints" {
+  description = "Enable VPC Endpoints. Set to false for minimal cost"
+  type        = bool
+  default     = false
+}
+
 variable "tags" {
   description = "Additional tags to apply to all resources"
   type        = map(string)

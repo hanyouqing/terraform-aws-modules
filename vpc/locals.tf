@@ -1,6 +1,13 @@
 locals {
   name = "${var.project}-${var.environment}"
 
+  # Caller identity ARN
+  # ARN format examples:
+  #   - arn:aws:iam::123456789012:user/username
+  #   - arn:aws:sts::123456789012:assumed-role/role-name/session-name
+  #   - arn:aws:sts::123456789012:assumed-role/role-name/terraform-session
+  caller_user_arn = data.aws_caller_identity.current.arn
+
   common_tags = merge(
     {
       Environment = var.environment
@@ -49,6 +56,76 @@ locals {
   public_subnets   = local.calculated_public_subnets
   private_subnets  = local.calculated_private_subnets
   database_subnets = local.calculated_database_subnets
+
+  # Maps for for_each (using resource names as keys)
+  # Public subnets map: key is the subnet name (e.g., "vpc-basic-development-public-a")
+  public_subnets_map = {
+    for idx, az in var.availability_zones : "${local.name}-public-${substr(az, -1, 1)}" => {
+      cidr_block           = local.public_subnets[idx]
+      az                   = az
+      az_suffix            = substr(az, -1, 1)
+      ipv6_prefix          = length(local.calculated_public_subnet_ipv6_prefixes) > idx ? local.calculated_public_subnet_ipv6_prefixes[idx] : null
+      ipv6_prefix_provided = length(var.public_subnet_ipv6_prefixes) > idx && var.public_subnet_ipv6_prefixes[idx] != "" ? var.public_subnet_ipv6_prefixes[idx] : null
+    }
+  }
+
+  # Private subnets map: key is the subnet name (e.g., "vpc-basic-development-private-a")
+  private_subnets_map = {
+    for idx, az in var.availability_zones : "${local.name}-private-${substr(az, -1, 1)}" => {
+      cidr_block           = local.private_subnets[idx]
+      az                   = az
+      az_suffix            = substr(az, -1, 1)
+      ipv6_prefix          = length(local.calculated_private_subnet_ipv6_prefixes) > idx ? local.calculated_private_subnet_ipv6_prefixes[idx] : null
+      ipv6_prefix_provided = length(var.private_subnet_ipv6_prefixes) > idx && var.private_subnet_ipv6_prefixes[idx] != "" ? var.private_subnet_ipv6_prefixes[idx] : null
+    }
+  }
+
+  # Database subnets map: key is the subnet name (e.g., "vpc-basic-development-database-a")
+  database_subnets_map = length(local.database_subnets) > 0 ? {
+    for idx, az in var.availability_zones : "${local.name}-database-${substr(az, -1, 1)}" => {
+      cidr_block           = local.database_subnets[idx]
+      az                   = az
+      az_suffix            = substr(az, -1, 1)
+      ipv6_prefix          = length(local.calculated_database_subnet_ipv6_prefixes) > idx ? local.calculated_database_subnet_ipv6_prefixes[idx] : null
+      ipv6_prefix_provided = length(var.database_subnet_ipv6_prefixes) > idx && var.database_subnet_ipv6_prefixes[idx] != "" ? var.database_subnet_ipv6_prefixes[idx] : null
+    }
+  } : {}
+
+  # NAT Gateway map: key is the NAT gateway name (e.g., "vpc-basic-development-nat-a")
+  nat_gateways_map = var.enable_nat_gateway ? (
+    local.single_nat ? {
+      "${local.name}-nat-${substr(var.availability_zones[0], -1, 1)}" = {
+        index      = 0
+        subnet_key = "${local.name}-public-${substr(var.availability_zones[0], -1, 1)}"
+        az_suffix  = substr(var.availability_zones[0], -1, 1)
+      }
+    } : {
+      for idx, az in var.availability_zones : "${local.name}-nat-${substr(az, -1, 1)}" => {
+        index      = idx
+        subnet_key = "${local.name}-public-${substr(az, -1, 1)}"
+        az_suffix  = substr(az, -1, 1)
+      }
+    }
+  ) : {}
+
+  # Private route tables map: key is the route table name (e.g., "vpc-basic-development-private-rt-a")
+  private_route_tables_map = {
+    for idx, az in var.availability_zones : "${local.name}-private-rt-${substr(az, -1, 1)}" => {
+      az              = az
+      az_suffix       = substr(az, -1, 1)
+      subnet_key      = "${local.name}-private-${substr(az, -1, 1)}"
+      nat_gateway_key = local.single_nat ? "${local.name}-nat-${substr(var.availability_zones[0], -1, 1)}" : "${local.name}-nat-${substr(az, -1, 1)}"
+    }
+  }
+
+  # Database route tables map: key is the route table name (e.g., "vpc-basic-development-database-rt-a")
+  database_route_tables_map = length(local.database_subnets) > 0 ? {
+    for idx, az in var.availability_zones : "${local.name}-database-rt-${substr(az, -1, 1)}" => {
+      az         = az
+      az_suffix  = substr(az, -1, 1)
+      subnet_key = "${local.name}-database-${substr(az, -1, 1)}"
+    }
+  } : {}
 
   # IPv6 prefix calculation
   calculated_public_subnet_ipv6_prefixes = var.enable_ipv6 && length(var.public_subnet_ipv6_prefixes) == 0 ? [
@@ -140,6 +217,27 @@ locals {
     }
   }
 
+  # Database port name mapping (for readable security group rule keys)
+  database_port_names = {
+    1433  = "sqlserver"
+    3306  = "mysql"
+    5432  = "postgresql"
+    6379  = "redis"
+    27017 = "mongodb"
+    1521  = "oracle"
+    5984  = "couchdb"
+    9200  = "elasticsearch"
+    9042  = "cassandra"
+  }
+
+  # Database security group allowed ports map (for for_each)
+  # Uses port name if available, otherwise uses port number as string
+  database_security_group_allowed_ports_map = {
+    for port in var.database_security_group_allowed_ports : (
+      contains(keys(local.database_port_names), port) ? local.database_port_names[port] : tostring(port)
+    ) => port
+  }
+
   # Security Group Rule Counts (for validation)
   # AWS limits security groups to 60 rules per direction (ingress/egress)
   public_sg_ingress_count = (
@@ -160,7 +258,7 @@ locals {
   )
 
   database_sg_ingress_count = (
-    length(var.database_security_group_allowed_ports) +
+    length(local.database_security_group_allowed_ports_map) +
     length(var.database_security_group_allowed_cidr_blocks)
   )
 

@@ -8,3 +8,6 @@
 data "aws_vpc" "main" {
   id = aws_vpc.main.id
 }
+
+# Get current AWS caller identity (equivalent to aws sts get-caller-identity)
+data "aws_caller_identity" "current" {}

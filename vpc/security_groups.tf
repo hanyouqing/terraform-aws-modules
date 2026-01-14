@@ -144,15 +144,15 @@ resource "aws_security_group" "database" {
 # Database Security Group Ingress Rules
 # Allow access from private security group (application tier)
 resource "aws_security_group_rule" "database_ingress_from_private" {
-  count = length(var.database_security_group_allowed_ports) > 0 ? length(var.database_security_group_allowed_ports) : 0
+  for_each = local.database_security_group_allowed_ports_map
 
   type                     = "ingress"
-  from_port                = var.database_security_group_allowed_ports[count.index]
-  to_port                  = var.database_security_group_allowed_ports[count.index]
+  from_port                = each.value
+  to_port                  = each.value
   protocol                 = "tcp"
   security_group_id        = aws_security_group.database.id
   source_security_group_id = aws_security_group.private.id
-  description              = "${local.name}-database-sg-rule-ingress: Allow port ${var.database_security_group_allowed_ports[count.index]} from private security group"
+  description              = "${local.name}-database-sg-rule-ingress: Allow port ${each.value} (${each.key}) from private security group"
 }
 
 # Allow access from specified CIDR blocks

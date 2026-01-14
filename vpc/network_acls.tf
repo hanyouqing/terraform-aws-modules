@@ -45,7 +45,7 @@ resource "aws_network_acl" "public" {
   count = var.enable_network_acls ? 1 : 0
 
   vpc_id     = aws_vpc.main.id
-  subnet_ids = aws_subnet.public[*].id
+  subnet_ids = [for k, v in aws_subnet.public : v.id]
 
   # Allow HTTP (80) from internet
   ingress {
@@ -101,7 +101,7 @@ resource "aws_network_acl" "private" {
   count = var.enable_network_acls ? 1 : 0
 
   vpc_id     = aws_vpc.main.id
-  subnet_ids = aws_subnet.private[*].id
+  subnet_ids = [for k, v in aws_subnet.private : v.id]
 
   # Allow all traffic from VPC CIDR
   ingress {
@@ -147,7 +147,7 @@ resource "aws_network_acl" "database" {
   count = var.enable_network_acls ? 1 : 0
 
   vpc_id     = aws_vpc.main.id
-  subnet_ids = aws_subnet.database[*].id
+  subnet_ids = [for k, v in aws_subnet.database : v.id]
 
   # Allow traffic from private subnets only
   ingress {
