@@ -195,7 +195,7 @@ After deployment, add NS records in your parent domain DNS provider:
 terraform output hosted_zone_ns_records_formatted
 
 # View detailed instructions for various DNS providers
-terraform output hosted_zone_delegation_instructions
+terraform output zzz_hosted_zone_delegation_instructions
 
 # View NS records list (for programmatic use)
 terraform output hosted_zone_ns_records_list

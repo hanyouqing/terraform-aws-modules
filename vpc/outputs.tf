@@ -645,7 +645,7 @@ output "hosted_zone_ns_records_list" {
   value       = var.domain != null ? aws_route53_zone.public[0].name_servers : []
 }
 
-output "hosted_zone_delegation_instructions" {
+output "zzz_hosted_zone_delegation_instructions" {
   description = "Instructions for delegating the subdomain to Route53"
   value = var.domain != null ? join("\n", [
     "⚠️  DNS DELEGATION INSTRUCTIONS:",
@@ -851,7 +851,26 @@ Pending Tasks:
    - Recommendation: Update ALB security group rules to use allowlist prefix list
    - Action: Add security group rules using prefix_list_ids instead of cidr_blocks
 
-3. Other:
+3. DNS Configuration (if domain is set):
+${var.domain != null ? join("\n", [
+  var.environment == "production" ? join("\n", [
+    "   ⚠️  PRODUCTION ENVIRONMENT DNS REQUIREMENTS:",
+    "   - Production environment includes additional SANs: *.${var.domain}",
+    "   - Ensure ALL DNS validation records are properly configured",
+    "   - Verify certificate validation: terraform output acm_certificate_validation_record_fqdns",
+    "   - DNS propagation may take longer in production (up to 48 hours)",
+    "   - Monitor ACM certificate status until validation completes",
+    "",
+    "   📋 For detailed DNS delegation instructions, see:",
+    "   terraform output zzz_hosted_zone_delegation_instructions"
+  ]) : join("\n", [
+    "   - Configure NS records in parent domain (${var.domain})",
+    "   - Get NS records: terraform output hosted_zone_name_servers_list",
+    "   - For detailed instructions: terraform output zzz_hosted_zone_delegation_instructions"
+  ])
+]) : "   - No domain configured"}
+
+4. Other:
    - Review and update any other resources that should use allowlist
    - Consider adding allowlist rules to VPC public security group if needed
 

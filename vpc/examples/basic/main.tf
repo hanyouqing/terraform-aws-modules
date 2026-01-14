@@ -11,6 +11,13 @@ terraform {
 
 provider "aws" {
   region = var.region
+
+  # Increase retry attempts for better reliability
+  max_retries = 10
+
+  # Optional: Uncomment if you need to skip credential validation (not recommended)
+  # skip_credentials_validation = false
+  # skip_metadata_api_check     = false
 }
 
 module "vpc" {

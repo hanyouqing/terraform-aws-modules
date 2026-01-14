@@ -171,9 +171,9 @@ output "hosted_zone_ns_records_list" {
   value       = module.vpc.hosted_zone_ns_records_list
 }
 
-output "hosted_zone_delegation_instructions" {
+output "zzz_hosted_zone_delegation_instructions" {
   description = "Detailed instructions for delegating the subdomain to Route53 in various DNS providers"
-  value       = module.vpc.hosted_zone_delegation_instructions
+  value       = module.vpc.zzz_hosted_zone_delegation_instructions
 }
 
 # Private Route53 Hosted Zone Outputs (for internal services like Redis, Database, etc.)

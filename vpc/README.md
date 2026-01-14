@@ -173,7 +173,7 @@ See [variables.tf](./variables.tf) for the complete list of available variables.
 | hosted_zone_ns_records_formatted | NS records in formatted string for easy copy-paste (if domain is set) |
 | hosted_zone_ns_records_cloudflare | NS records formatted for Cloudflare DNS in JSON format (if domain is set) |
 | hosted_zone_ns_records_list | List of NS record values (name servers) for programmatic use (if domain is set) |
-| hosted_zone_delegation_instructions | Detailed instructions for delegating subdomain to Route53 (if domain is set) |
+| zzz_hosted_zone_delegation_instructions | Detailed instructions for delegating subdomain to Route53 (if domain is set) |
 | private_hosted_zone_id | ID of the Route 53 private hosted zone for internal services (automatically created when domain is specified). Uses the same domain as public hosted zone. |
 | private_hosted_zone_name | Name of the Route 53 private hosted zone ({environment}.{domain}, same as public hosted zone) |
 | private_hosted_zone_arn | ARN of the Route 53 private hosted zone for internal services |
@@ -409,7 +409,7 @@ After creating these records, you can access services using friendly names (with
 
 2. **Configure DNS** (if using domain):
    - Add NS records from `hosted_zone_name_servers` output to parent domain
-   - See `hosted_zone_delegation_instructions` output for detailed steps
+   - See `zzz_hosted_zone_delegation_instructions` output for detailed steps
    - Use `hosted_zone_ns_records_formatted` for easy copy-paste
    - See [DNS Delegation](#dns-delegation) section below for detailed instructions
 
@@ -429,7 +429,7 @@ After deploying the VPC module, run:
 terraform output hosted_zone_ns_records_formatted
 
 # View detailed instructions
-terraform output hosted_zone_delegation_instructions
+terraform output zzz_hosted_zone_delegation_instructions
 
 # View NS records list (for programmatic use)
 terraform output hosted_zone_ns_records_list
@@ -539,7 +539,7 @@ output "dns_delegation_info" {
   value = {
     subdomain = data.terraform_remote_state.vpc.outputs.domain_name
     ns_records = data.terraform_remote_state.vpc.outputs.hosted_zone_ns_records_list
-    instructions = data.terraform_remote_state.vpc.outputs.hosted_zone_delegation_instructions
+    instructions = data.terraform_remote_state.vpc.outputs.zzz_hosted_zone_delegation_instructions
   }
 }
 ```

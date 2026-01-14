@@ -5,9 +5,11 @@ resource "aws_acm_certificate" "environment" {
   validation_method = "DNS"
 
   subject_alternative_names = var.environment == "production" ? [
+    "${var.environment}.${var.domain}",
     "*.${var.environment}.${var.domain}",
     "*.${var.domain}"
-    ] : [
+  ] : [
+    "${var.environment}.${var.domain}",
     "*.${var.environment}.${var.domain}"
   ]
 
@@ -40,11 +42,11 @@ resource "aws_route53_record" "certificate_validation" {
 
   allow_overwrite = true
   # Remove trailing dot from resource_record_name if present (Route53 handles this automatically)
-  name    = trimsuffix(each.value.name, ".")
-  records = [each.value.record]
-  ttl     = 60
-  type    = each.value.type
-  zone_id = var.domain != null ? aws_route53_zone.public[0].zone_id : null
+  name            = trimsuffix(each.value.name, ".")
+  records         = [each.value.record]
+  ttl             = 60
+  type            = each.value.type
+  zone_id         = var.domain != null ? aws_route53_zone.public[0].zone_id : null
 
   # Ensure the public hosted zone exists before creating validation records
   depends_on = [aws_route53_zone.public]
