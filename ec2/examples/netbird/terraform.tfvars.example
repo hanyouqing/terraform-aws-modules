@@ -1,0 +1,40 @@
+region = "us-east-1"
+
+project     = "ec2-netbird"
+environment = "production"
+
+vpc_remote_state_bucket = "terraform-aws-modules-example-state"
+vpc_remote_state_key    = "hanyouqing/terraform-aws-modules:vpc/examples/complete/terraform.tfstate"
+
+instance_count = 1
+instance_type  = "t3.micro"
+
+enable_monitoring             = false
+ebs_volume_size               = 8
+ebs_volume_type               = "gp3"
+ebs_encrypted                 = true
+enable_termination_protection = false
+
+# NetBird configuration
+# Get your setup key from NetBird Management Dashboard: https://app.netbird.io
+netbird_setup_key = "YOUR_NETBIRD_SETUP_KEY_HERE"
+
+# Optional: Use self-hosted NetBird management server
+# netbird_management_url = "https://netbird.example.com"
+
+# SSM Session Manager (recommended for secure access)
+enable_ssm_session_manager = true
+
+# Elastic IP for stable public IP (optional)
+enable_eip = false
+
+# DNS configuration (optional)
+domain      = null
+dns_enabled = false
+dns_ttl     = 60
+
+tags = {
+  Owner      = "DevOps"
+  CostCenter = "Infrastructure"
+  Code       = "terraform-aws-modules:ec2/examples/netbird"
+}
