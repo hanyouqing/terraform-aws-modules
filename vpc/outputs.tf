@@ -837,7 +837,7 @@ ${length(aws_ec2_managed_prefix_list.allowlist_ipv4) > 0 ? join("\n", [
 ${length(aws_ec2_managed_prefix_list.allowlist_ipv6) > 0 ? join("\n", [
   "- IPv6 Prefix List ID: ${aws_ec2_managed_prefix_list.allowlist_ipv6[0].id}",
   "- IPv6 Prefix List Name: ${aws_ec2_managed_prefix_list.allowlist_ipv6[0].name}"
-]) : "- IPv6 Prefix List: Not configured"}
+  ]) : "- IPv6 Prefix List: Not configured"}
 
 Pending Tasks:
 1. EKS Public Access:
@@ -863,7 +863,7 @@ ${var.domain != null ? join("\n", [
     "",
     "   📋 For detailed DNS delegation instructions, see:",
     "   terraform output zzz_hosted_zone_delegation_instructions"
-  ]) : join("\n", [
+    ]) : join("\n", [
     "   - Configure NS records in parent domain (${var.domain})",
     "   - Get NS records: terraform output hosted_zone_name_servers_list",
     "   - For detailed instructions: terraform output zzz_hosted_zone_delegation_instructions"
