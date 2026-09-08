@@ -16,7 +16,7 @@ A production-ready Terraform module for creating AWS EC2 instances running Ubunt
 - Instance metadata service v2 (IMDSv2) enabled
 - Termination protection (configurable)
 - Integration with existing VPC infrastructure
-- Uses community-maintained Terraform module for EC2 instances
+- Native `aws_instance` resources (no nested community EC2 module)
 
 ## Features
 
@@ -1027,3 +1027,326 @@ This module is licensed under the Apache License 2.0. See [LICENSE](../LICENSE) 
 - [AWS EC2 Best Practices](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-best-practices.html)
 - [JumpServer Documentation](https://docs.jumpserver.org/)
 - [Terraform AWS Provider Documentation](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
+
+<!-- BEGIN_TF_DOCS -->
+## Requirements
+
+| Name | Version |
+| ---- | ------- |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.14.2 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | ~> 6.28 |
+| <a name="requirement_local"></a> [local](#requirement\_local) | ~> 2.5 |
+| <a name="requirement_random"></a> [random](#requirement\_random) | ~> 3.6 |
+
+## Providers
+
+| Name | Version |
+| ---- | ------- |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.63.0 |
+| <a name="provider_local"></a> [local](#provider\_local) | 2.9.0 |
+| <a name="provider_random"></a> [random](#provider\_random) | 3.9.0 |
+| <a name="provider_terraform"></a> [terraform](#provider\_terraform) | n/a |
+
+## Modules
+
+No modules.
+
+## Resources
+
+| Name | Type |
+| ---- | ---- |
+| [aws_autoscaling_group.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/autoscaling_group) | resource |
+| [aws_cloudwatch_log_group.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
+| [aws_cloudwatch_log_stream.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_stream) | resource |
+| [aws_ebs_volume.additional](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ebs_volume) | resource |
+| [aws_eip.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eip) | resource |
+| [aws_eip_association.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eip_association) | resource |
+| [aws_elb.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/elb) | resource |
+| [aws_iam_instance_profile.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_instance_profile) | resource |
+| [aws_iam_role.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
+| [aws_iam_role_policy.main_cloudwatch_logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
+| [aws_iam_role_policy.main_cloudwatch_metrics](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
+| [aws_iam_role_policy.main_custom](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
+| [aws_iam_role_policy.main_ec2_access](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
+| [aws_iam_role_policy.main_ecr_access](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
+| [aws_iam_role_policy.main_ecs_access](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
+| [aws_iam_role_policy.main_eks_access](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
+| [aws_iam_role_policy.main_elasticache_access](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
+| [aws_iam_role_policy.main_rds_access](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
+| [aws_iam_role_policy_attachment.main_managed](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
+| [aws_iam_role_policy_attachment.main_ssm](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
+| [aws_instance.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/instance) | resource |
+| [aws_key_pair.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/key_pair) | resource |
+| [aws_launch_template.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/launch_template) | resource |
+| [aws_lb.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb) | resource |
+| [aws_lb_listener.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_listener) | resource |
+| [aws_lb_listener.redirect](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_listener) | resource |
+| [aws_lb_target_group.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_target_group) | resource |
+| [aws_lb_target_group_attachment.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_target_group_attachment) | resource |
+| [aws_route53_record.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_record) | resource |
+| [aws_route53_record.main_alb](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_record) | resource |
+| [aws_route53_record.main_cname](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_record) | resource |
+| [aws_route53_record.main_private](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_record) | resource |
+| [aws_route53_record.project_alb](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_record) | resource |
+| [aws_security_group.alb](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
+| [aws_security_group.elb](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
+| [aws_security_group.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
+| [aws_security_group_rule.alb_to_instance](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule) | resource |
+| [aws_security_group_rule.custom](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule) | resource |
+| [aws_security_group_rule.elb_to_instance](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule) | resource |
+| [aws_volume_attachment.additional](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/volume_attachment) | resource |
+| [local_file.ssh_config](https://registry.terraform.io/providers/hashicorp/local/latest/docs/resources/file) | resource |
+| [random_password.jump_db](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/password) | resource |
+| [random_password.jump_redis](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/password) | resource |
+| [aws_ami.custom](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ami) | data source |
+| [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
+| [aws_ssm_parameter.amazon_linux_2023_ami](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ssm_parameter) | data source |
+| [aws_ssm_parameter.debian_11_ami](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ssm_parameter) | data source |
+| [aws_ssm_parameter.debian_12_ami](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ssm_parameter) | data source |
+| [aws_ssm_parameter.rhel_8_ami](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ssm_parameter) | data source |
+| [aws_ssm_parameter.rhel_9_ami](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ssm_parameter) | data source |
+| [aws_ssm_parameter.ubuntu_24_04_ami](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ssm_parameter) | data source |
+| [local_file.ssh_public_key](https://registry.terraform.io/providers/hashicorp/local/latest/docs/data-sources/file) | data source |
+| [terraform_remote_state.vpc](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/data-sources/remote_state) | data source |
+
+## Inputs
+
+| Name | Description | Type | Default | Required |
+| ---- | ----------- | ---- | ------- | :------: |
+| <a name="input_additional_ebs_volumes"></a> [additional\_ebs\_volumes](#input\_additional\_ebs\_volumes) | Map of additional EBS volumes to attach to instances. Key format: '{instance\_name}.{volume\_name}'. Example: { 'web-1.data' => { size = 100, type = 'gp3' } } | <pre>map(object({<br/>    size        = number<br/>    type        = optional(string, "gp3")<br/>    encrypted   = optional(bool, true)<br/>    kms_key_id  = optional(string, null)<br/>    device_name = optional(string, null)<br/>    tags        = optional(map(string), {})<br/>  }))</pre> | `{}` | no |
+| <a name="input_alb_certificate_arn"></a> [alb\_certificate\_arn](#input\_alb\_certificate\_arn) | ARN of SSL certificate for HTTPS listener (required if alb\_protocol is HTTPS) | `string` | `null` | no |
+| <a name="input_alb_enable_deletion_protection"></a> [alb\_enable\_deletion\_protection](#input\_alb\_enable\_deletion\_protection) | Enable deletion protection for ALB | `bool` | `false` | no |
+| <a name="input_alb_health_check_healthy_threshold"></a> [alb\_health\_check\_healthy\_threshold](#input\_alb\_health\_check\_healthy\_threshold) | Number of consecutive successful health checks before marking target as healthy | `number` | `2` | no |
+| <a name="input_alb_health_check_interval"></a> [alb\_health\_check\_interval](#input\_alb\_health\_check\_interval) | Health check interval in seconds for ALB | `number` | `30` | no |
+| <a name="input_alb_health_check_path"></a> [alb\_health\_check\_path](#input\_alb\_health\_check\_path) | Health check path for ALB target group | `string` | `"/"` | no |
+| <a name="input_alb_health_check_port"></a> [alb\_health\_check\_port](#input\_alb\_health\_check\_port) | Health check port for ALB target group | `number` | `null` | no |
+| <a name="input_alb_health_check_protocol"></a> [alb\_health\_check\_protocol](#input\_alb\_health\_check\_protocol) | Health check protocol for ALB target group (HTTP or HTTPS) | `string` | `"HTTP"` | no |
+| <a name="input_alb_health_check_timeout"></a> [alb\_health\_check\_timeout](#input\_alb\_health\_check\_timeout) | Health check timeout in seconds for ALB | `number` | `5` | no |
+| <a name="input_alb_health_check_unhealthy_threshold"></a> [alb\_health\_check\_unhealthy\_threshold](#input\_alb\_health\_check\_unhealthy\_threshold) | Number of consecutive failed health checks before marking target as unhealthy | `number` | `2` | no |
+| <a name="input_alb_ingress_cidr_blocks"></a> [alb\_ingress\_cidr\_blocks](#input\_alb\_ingress\_cidr\_blocks) | CIDR blocks allowed to reach the ALB security group created by this module. Prefer allowlists over 0.0.0.0/0 in production. | `list(string)` | <pre>[<br/>  "0.0.0.0/0"<br/>]</pre> | no |
+| <a name="input_alb_internal"></a> [alb\_internal](#input\_alb\_internal) | Whether the ALB is internal (true) or internet-facing (false) | `bool` | `false` | no |
+| <a name="input_alb_port"></a> [alb\_port](#input\_alb\_port) | Port for ALB listener | `number` | `80` | no |
+| <a name="input_alb_protocol"></a> [alb\_protocol](#input\_alb\_protocol) | Protocol for ALB listener (HTTP or HTTPS) | `string` | `"HTTP"` | no |
+| <a name="input_alb_subnet_type"></a> [alb\_subnet\_type](#input\_alb\_subnet\_type) | Subnet type for ALB (public, private, database). Defaults to public for internet-facing, private for internal | `string` | `null` | no |
+| <a name="input_alb_target_port"></a> [alb\_target\_port](#input\_alb\_target\_port) | Target port on EC2 instances for ALB | `number` | `80` | no |
+| <a name="input_alb_target_protocol"></a> [alb\_target\_protocol](#input\_alb\_target\_protocol) | Target protocol for ALB (HTTP or HTTPS) | `string` | `"HTTP"` | no |
+| <a name="input_ami_id"></a> [ami\_id](#input\_ami\_id) | AMI ID to use for instances. If not specified, will use Ubuntu 24.04 LTS from SSM Parameter Store | `string` | `null` | no |
+| <a name="input_ami_name_filter"></a> [ami\_name\_filter](#input\_ami\_name\_filter) | AMI name filter for AMI lookup. Used when ami\_id is not specified | `string` | `"ubuntu/images/hvm-ssd/ubuntu-noble-24.04-amd64-server-*"` | no |
+| <a name="input_ami_owner"></a> [ami\_owner](#input\_ami\_owner) | AMI owner for AMI lookup (e.g., '099720109477' for Canonical/Ubuntu, 'amazon' for Amazon Linux) | `string` | `"099720109477"` | no |
+| <a name="input_asg_default_cooldown"></a> [asg\_default\_cooldown](#input\_asg\_default\_cooldown) | Default cooldown period in seconds | `number` | `300` | no |
+| <a name="input_asg_desired_capacity"></a> [asg\_desired\_capacity](#input\_asg\_desired\_capacity) | Desired number of instances in the Auto Scaling Group | `number` | `1` | no |
+| <a name="input_asg_health_check_grace_period"></a> [asg\_health\_check\_grace\_period](#input\_asg\_health\_check\_grace\_period) | Health check grace period in seconds | `number` | `300` | no |
+| <a name="input_asg_health_check_type"></a> [asg\_health\_check\_type](#input\_asg\_health\_check\_type) | Health check type for ASG. Options: EC2, ELB | `string` | `"EC2"` | no |
+| <a name="input_asg_max_size"></a> [asg\_max\_size](#input\_asg\_max\_size) | Maximum number of instances in the Auto Scaling Group | `number` | `3` | no |
+| <a name="input_asg_min_size"></a> [asg\_min\_size](#input\_asg\_min\_size) | Minimum number of instances in the Auto Scaling Group | `number` | `1` | no |
+| <a name="input_asg_tags"></a> [asg\_tags](#input\_asg\_tags) | Additional tags for ASG instances | `map(string)` | `{}` | no |
+| <a name="input_asg_termination_policies"></a> [asg\_termination\_policies](#input\_asg\_termination\_policies) | List of termination policies for ASG | `list(string)` | <pre>[<br/>  "Default"<br/>]</pre> | no |
+| <a name="input_assume_role_arn"></a> [assume\_role\_arn](#input\_assume\_role\_arn) | IAM role ARN to assume for cross-account access (optional) | `string` | `null` | no |
+| <a name="input_assume_role_external_id"></a> [assume\_role\_external\_id](#input\_assume\_role\_external\_id) | External ID to use when assuming role (optional) | `string` | `null` | no |
+| <a name="input_assume_role_session_name"></a> [assume\_role\_session\_name](#input\_assume\_role\_session\_name) | Session name to use when assuming role | `string` | `"terraform-ec2"` | no |
+| <a name="input_cloudwatch_logs_enabled"></a> [cloudwatch\_logs\_enabled](#input\_cloudwatch\_logs\_enabled) | Enable CloudWatch Logs for instances. When enabled, creates log groups and configures log streaming. | `bool` | `false` | no |
+| <a name="input_cloudwatch_logs_group_name"></a> [cloudwatch\_logs\_group\_name](#input\_cloudwatch\_logs\_group\_name) | Name of the CloudWatch Logs group. If not specified, uses {name\_prefix}-{environment}-logs | `string` | `null` | no |
+| <a name="input_cloudwatch_logs_retention_days"></a> [cloudwatch\_logs\_retention\_days](#input\_cloudwatch\_logs\_retention\_days) | Number of days to retain CloudWatch logs. Options: 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 3653, or 0 (never expire) | `number` | `7` | no |
+| <a name="input_cloudwatch_metrics_enabled"></a> [cloudwatch\_metrics\_enabled](#input\_cloudwatch\_metrics\_enabled) | Enable custom CloudWatch metrics collection. When enabled, installs CloudWatch agent and configures metrics. | `bool` | `false` | no |
+| <a name="input_code"></a> [code](#input\_code) | Code repository and path (e.g., 'reponame:path/to/terraform/ec2') | `string` | `""` | no |
+| <a name="input_cost_center"></a> [cost\_center](#input\_cost\_center) | Cost center for cost allocation | `string` | `null` | no |
+| <a name="input_database_subnet_ids"></a> [database\_subnet\_ids](#input\_database\_subnet\_ids) | Database subnet IDs when not using VPC remote state | `list(string)` | `[]` | no |
+| <a name="input_dns_enabled"></a> [dns\_enabled](#input\_dns\_enabled) | Enable Route53 DNS records for instances | `bool` | `false` | no |
+| <a name="input_dns_record_format"></a> [dns\_record\_format](#input\_dns\_record\_format) | Format for DNS record names. Variables: {name\_prefix}, {index}, {environment}, {domain}. Default: '{name\_prefix}-{index}.{environment}.{domain}' | `string` | `null` | no |
+| <a name="input_dns_ttl"></a> [dns\_ttl](#input\_dns\_ttl) | TTL for Route53 DNS records in seconds. Lower TTL (60-120 seconds) ensures faster DNS updates when instance IP changes. | `number` | `60` | no |
+| <a name="input_domain"></a> [domain](#input\_domain) | Base domain for DNS records (e.g., example.com). If VPC remote state has a domain configured, it will be used; otherwise this default will be used. | `string` | `null` | no |
+| <a name="input_ebs_encrypted"></a> [ebs\_encrypted](#input\_ebs\_encrypted) | Enable encryption for EBS volume | `bool` | `true` | no |
+| <a name="input_ebs_kms_key_id"></a> [ebs\_kms\_key\_id](#input\_ebs\_kms\_key\_id) | KMS key ID for EBS encryption (optional, uses default if not specified) | `string` | `null` | no |
+| <a name="input_ebs_volume_size"></a> [ebs\_volume\_size](#input\_ebs\_volume\_size) | Size of the EBS root volume in GB. Minimum 60GB recommended when jump server is enabled, 100GB when GitLab is enabled | `number` | `null` | no |
+| <a name="input_ebs_volume_type"></a> [ebs\_volume\_type](#input\_ebs\_volume\_type) | Type of EBS volume (gp3, gp2, io1, io2) | `string` | `"gp3"` | no |
+| <a name="input_ec2_external_policy_arns"></a> [ec2\_external\_policy\_arns](#input\_ec2\_external\_policy\_arns) | List of external IAM policy ARNs to attach to the IAM role. This is an alias for iam\_role\_policy\_arns for clarity when attaching external policies. | `list(string)` | `[]` | no |
+| <a name="input_elb_certificate_id"></a> [elb\_certificate\_id](#input\_elb\_certificate\_id) | ARN of SSL certificate for HTTPS/SSL listener (required if elb\_listener\_protocol is HTTPS or SSL) | `string` | `null` | no |
+| <a name="input_elb_connection_draining"></a> [elb\_connection\_draining](#input\_elb\_connection\_draining) | Enable connection draining for ELB | `bool` | `true` | no |
+| <a name="input_elb_connection_draining_timeout"></a> [elb\_connection\_draining\_timeout](#input\_elb\_connection\_draining\_timeout) | Connection draining timeout in seconds for ELB | `number` | `300` | no |
+| <a name="input_elb_cross_zone_load_balancing"></a> [elb\_cross\_zone\_load\_balancing](#input\_elb\_cross\_zone\_load\_balancing) | Enable cross-zone load balancing for ELB | `bool` | `true` | no |
+| <a name="input_elb_health_check_healthy_threshold"></a> [elb\_health\_check\_healthy\_threshold](#input\_elb\_health\_check\_healthy\_threshold) | Number of consecutive successful health checks before marking instance as healthy | `number` | `2` | no |
+| <a name="input_elb_health_check_interval"></a> [elb\_health\_check\_interval](#input\_elb\_health\_check\_interval) | Health check interval in seconds for ELB | `number` | `30` | no |
+| <a name="input_elb_health_check_target"></a> [elb\_health\_check\_target](#input\_elb\_health\_check\_target) | Health check target for ELB (e.g., HTTP:80/health or TCP:80) | `string` | `"HTTP:80/"` | no |
+| <a name="input_elb_health_check_timeout"></a> [elb\_health\_check\_timeout](#input\_elb\_health\_check\_timeout) | Health check timeout in seconds for ELB | `number` | `5` | no |
+| <a name="input_elb_health_check_unhealthy_threshold"></a> [elb\_health\_check\_unhealthy\_threshold](#input\_elb\_health\_check\_unhealthy\_threshold) | Number of consecutive failed health checks before marking instance as unhealthy | `number` | `2` | no |
+| <a name="input_elb_idle_timeout"></a> [elb\_idle\_timeout](#input\_elb\_idle\_timeout) | Idle timeout in seconds for ELB | `number` | `60` | no |
+| <a name="input_elb_ingress_cidr_blocks"></a> [elb\_ingress\_cidr\_blocks](#input\_elb\_ingress\_cidr\_blocks) | CIDR blocks allowed to reach the Classic ELB. Prefer allowlists over 0.0.0.0/0 in production. | `list(string)` | <pre>[<br/>  "0.0.0.0/0"<br/>]</pre> | no |
+| <a name="input_elb_instance_port"></a> [elb\_instance\_port](#input\_elb\_instance\_port) | Port on EC2 instances for ELB | `number` | `80` | no |
+| <a name="input_elb_instance_protocol"></a> [elb\_instance\_protocol](#input\_elb\_instance\_protocol) | Protocol for ELB instance connection (HTTP, HTTPS, TCP, SSL) | `string` | `"HTTP"` | no |
+| <a name="input_elb_internal"></a> [elb\_internal](#input\_elb\_internal) | Whether the ELB is internal (true) or internet-facing (false) | `bool` | `false` | no |
+| <a name="input_elb_listener_port"></a> [elb\_listener\_port](#input\_elb\_listener\_port) | Port for ELB listener | `number` | `80` | no |
+| <a name="input_elb_listener_protocol"></a> [elb\_listener\_protocol](#input\_elb\_listener\_protocol) | Protocol for ELB listener (HTTP, HTTPS, TCP, SSL) | `string` | `"HTTP"` | no |
+| <a name="input_elb_subnet_type"></a> [elb\_subnet\_type](#input\_elb\_subnet\_type) | Subnet type for ELB (public, private, database). Defaults to public for internet-facing, private for internal | `string` | `null` | no |
+| <a name="input_enable_alb"></a> [enable\_alb](#input\_enable\_alb) | Enable Application Load Balancer for EC2 instances | `bool` | `false` | no |
+| <a name="input_enable_autoscaling"></a> [enable\_autoscaling](#input\_enable\_autoscaling) | Enable Auto Scaling Group for instances. When enabled, creates a Launch Template and ASG instead of individual EC2 instances. Note: When ASG is enabled, instance\_count and instances variables are ignored. | `bool` | `false` | no |
+| <a name="input_enable_ecr"></a> [enable\_ecr](#input\_enable\_ecr) | Enable ECR access permissions. When enabled, allows EC2 instance to pull/push Docker images from/to ECR repositories. | `bool` | `false` | no |
+| <a name="input_enable_ecs"></a> [enable\_ecs](#input\_enable\_ecs) | Enable ECS access permissions. When enabled, allows EC2 instance to describe ECS clusters, services, tasks, and execute commands in containers. | `bool` | `false` | no |
+| <a name="input_enable_eip"></a> [enable\_eip](#input\_enable\_eip) | Enable Elastic IP allocation for instances in public subnets. When enabled, each instance in a public subnet (associate\_public\_ip = true) will get a static public IP address. Useful for jump servers and other services that need a stable public IP. Note: Instances must be in public subnets for EIP to work. | `bool` | `false` | no |
+| <a name="input_enable_eks"></a> [enable\_eks](#input\_enable\_eks) | Enable EKS access permissions. When enabled, allows EC2 instance to describe EKS clusters and configure kubectl access. | `bool` | `false` | no |
+| <a name="input_enable_elasticache"></a> [enable\_elasticache](#input\_enable\_elasticache) | Enable ElastiCache access permissions. When enabled, allows EC2 instance to describe ElastiCache clusters and nodes. | `bool` | `false` | no |
+| <a name="input_enable_elb"></a> [enable\_elb](#input\_enable\_elb) | Enable Classic Load Balancer (ELB) for EC2 instances | `bool` | `false` | no |
+| <a name="input_enable_ipv6"></a> [enable\_ipv6](#input\_enable\_ipv6) | Enable IPv6 support for EC2 instances. Requires subnet to have IPv6 CIDR block assigned. | `bool` | `false` | no |
+| <a name="input_enable_jump"></a> [enable\_jump](#input\_enable\_jump) | Enable jump server deployment on instances. When enabled, automatically deploys jump server via userdata and configures security group rules | `bool` | `false` | no |
+| <a name="input_enable_monitoring"></a> [enable\_monitoring](#input\_enable\_monitoring) | Enable detailed CloudWatch monitoring (costs extra, basic monitoring is free) | `bool` | `false` | no |
+| <a name="input_enable_rds"></a> [enable\_rds](#input\_enable\_rds) | Enable RDS access permissions (Secrets Manager and RDS describe). When enabled, allows EC2 instance to access RDS secrets and describe RDS instances. | `bool` | `false` | no |
+| <a name="input_enable_ssm_session_manager"></a> [enable\_ssm\_session\_manager](#input\_enable\_ssm\_session\_manager) | Enable AWS Systems Manager Session Manager for secure, SSH-free access to instances. When enabled, automatically attaches AmazonSSMManagedInstanceCore policy and ensures SSM Agent is running. This provides a more secure alternative to SSH. | `bool` | `false` | no |
+| <a name="input_enable_termination_protection"></a> [enable\_termination\_protection](#input\_enable\_termination\_protection) | Enable termination protection for the instance | `bool` | `false` | no |
+| <a name="input_environment"></a> [environment](#input\_environment) | Environment name (development, testing, staging, production) | `string` | n/a | yes |
+| <a name="input_gitlab_enabled"></a> [gitlab\_enabled](#input\_gitlab\_enabled) | Enable GitLab CE installation on instances. When enabled, automatically deploys GitLab via userdata and configures security group rules | `bool` | `false` | no |
+| <a name="input_gitlab_external_url"></a> [gitlab\_external\_url](#input\_gitlab\_external\_url) | GitLab external URL (e.g., http://gitlab.example.com or https://gitlab.example.com). Used for GitLab configuration | `string` | `"http://gitlab.example.com"` | no |
+| <a name="input_gitlab_http_port"></a> [gitlab\_http\_port](#input\_gitlab\_http\_port) | GitLab HTTP port | `number` | `80` | no |
+| <a name="input_gitlab_https_port"></a> [gitlab\_https\_port](#input\_gitlab\_https\_port) | GitLab HTTPS port | `number` | `443` | no |
+| <a name="input_gitlab_ssh_port"></a> [gitlab\_ssh\_port](#input\_gitlab\_ssh\_port) | GitLab SSH port (for Git operations) | `number` | `22` | no |
+| <a name="input_hostname"></a> [hostname](#input\_hostname) | Hostname prefix for instances (optional, use instances variable or instance\_defaults.hostname\_prefix instead) | `string` | `null` | no |
+| <a name="input_iam_instance_profile_enabled"></a> [iam\_instance\_profile\_enabled](#input\_iam\_instance\_profile\_enabled) | Enable IAM instance profile for AWS service access (RDS, ElastiCache, ECR, EKS, ECS, etc.) | `bool` | `false` | no |
+| <a name="input_iam_instance_profile_name"></a> [iam\_instance\_profile\_name](#input\_iam\_instance\_profile\_name) | Name of existing IAM instance profile to attach. If specified, iam\_instance\_profile\_enabled must be true and custom IAM role/policies will not be created | `string` | `null` | no |
+| <a name="input_iam_role_name"></a> [iam\_role\_name](#input\_iam\_role\_name) | Name for the IAM role (when creating new role). Defaults to {name\_prefix}-{environment}-role | `string` | `null` | no |
+| <a name="input_iam_role_policies"></a> [iam\_role\_policies](#input\_iam\_role\_policies) | Map of additional IAM policies to attach to the IAM role. Format: { policy\_name => policy\_json } | `map(string)` | `{}` | no |
+| <a name="input_iam_role_policy_arns"></a> [iam\_role\_policy\_arns](#input\_iam\_role\_policy\_arns) | List of IAM policy ARNs to attach to the IAM role | `list(string)` | `[]` | no |
+| <a name="input_instance_count"></a> [instance\_count](#input\_instance\_count) | Number of EC2 instances to create. If set, instances will be generated automatically using instance\_defaults. The instances map will use hostname as the key (e.g., 'ec2-production-1', 'ec2-production-2'). Recommended approach for multiple instances. | `number` | `0` | no |
+| <a name="input_instance_defaults"></a> [instance\_defaults](#input\_instance\_defaults) | Default configuration for instances when using instance\_count. Individual instances can override these defaults via instance\_overrides. | <pre>object({<br/>    instance_type                 = optional(string, null)<br/>    key_name                      = optional(string, null)<br/>    hostname_prefix               = optional(string, null)<br/>    subnet_id                     = optional(string, null)<br/>    subnet_type                   = optional(string, null)<br/>    associate_public_ip           = optional(bool, null)<br/>    enable_monitoring             = optional(bool, false)<br/>    ebs_volume_size               = optional(number, null)<br/>    ebs_volume_type               = optional(string, "gp3")<br/>    ebs_encrypted                 = optional(bool, true)<br/>    ebs_kms_key_id                = optional(string, null)<br/>    enable_termination_protection = optional(bool, false)<br/>    metadata_options = optional(object({<br/>      http_endpoint               = optional(string, "enabled")<br/>      http_tokens                 = optional(string, "required")<br/>      http_put_response_hop_limit = optional(number, 2)<br/>      instance_metadata_tags      = optional(string, "enabled")<br/>    }), {})<br/>    user_data                   = optional(string, null)<br/>    user_data_replace_on_change = optional(bool, true)<br/>    tags                        = optional(map(string), {})<br/>  })</pre> | `{}` | no |
+| <a name="input_instance_overrides"></a> [instance\_overrides](#input\_instance\_overrides) | Map of instance-specific overrides. Key is hostname, value is instance configuration object that will override instance\_defaults. | <pre>map(object({<br/>    instance_type                 = optional(string, null)<br/>    key_name                      = optional(string, null)<br/>    subnet_id                     = optional(string, null)<br/>    subnet_type                   = optional(string, null)<br/>    associate_public_ip           = optional(bool, null)<br/>    enable_monitoring             = optional(bool, null)<br/>    ebs_volume_size               = optional(number, null)<br/>    ebs_volume_type               = optional(string, null)<br/>    ebs_encrypted                 = optional(bool, null)<br/>    ebs_kms_key_id                = optional(string, null)<br/>    enable_termination_protection = optional(bool, null)<br/>    metadata_options = optional(object({<br/>      http_endpoint               = optional(string, "enabled")<br/>      http_tokens                 = optional(string, "required")<br/>      http_put_response_hop_limit = optional(number, 2)<br/>      instance_metadata_tags      = optional(string, "enabled")<br/>    }), null)<br/>    user_data                   = optional(string, null)<br/>    user_data_replace_on_change = optional(bool, null)<br/>    tags                        = optional(map(string), {})<br/>  }))</pre> | `{}` | no |
+| <a name="input_instance_type"></a> [instance\_type](#input\_instance\_type) | EC2 instance type. Defaults to t3.micro for general use, t3.medium when jump server is enabled, t3.large when GitLab is enabled | `string` | `null` | no |
+| <a name="input_instances"></a> [instances](#input\_instances) | Map of instance configurations. Key is instance name, value is instance configuration object. Use instance\_count and instance\_defaults instead. | <pre>map(object({<br/>    instance_type                 = optional(string, null)<br/>    key_name                      = optional(string, null)<br/>    hostname                      = optional(string, null)<br/>    subnet_id                     = optional(string, null)<br/>    subnet_type                   = optional(string, null)<br/>    associate_public_ip           = optional(bool, null)<br/>    enable_monitoring             = optional(bool, false)<br/>    ebs_volume_size               = optional(number, null)<br/>    ebs_volume_type               = optional(string, "gp3")<br/>    ebs_encrypted                 = optional(bool, true)<br/>    ebs_kms_key_id                = optional(string, null)<br/>    enable_termination_protection = optional(bool, false)<br/>    metadata_options = optional(object({<br/>      http_endpoint               = optional(string, "enabled")<br/>      http_tokens                 = optional(string, "required")<br/>      http_put_response_hop_limit = optional(number, 2)<br/>      instance_metadata_tags      = optional(string, "enabled")<br/>    }), {})<br/>    user_data                   = optional(string, null)<br/>    user_data_replace_on_change = optional(bool, true)<br/>    tags                        = optional(map(string), {})<br/>  }))</pre> | `{}` | no |
+| <a name="input_ipv6_address_count"></a> [ipv6\_address\_count](#input\_ipv6\_address\_count) | Number of IPv6 addresses to assign to each instance. Requires enable\_ipv6 = true | `number` | `1` | no |
+| <a name="input_jump_bootstrap_token"></a> [jump\_bootstrap\_token](#input\_jump\_bootstrap\_token) | Jump server BOOTSTRAP\_TOKEN (24+ characters). If not provided, will be auto-generated | `string` | `null` | no |
+| <a name="input_jump_db_host"></a> [jump\_db\_host](#input\_jump\_db\_host) | Jump server database host (use 'localhost' for local MySQL, or RDS endpoint for external database) | `string` | `"localhost"` | no |
+| <a name="input_jump_db_name"></a> [jump\_db\_name](#input\_jump\_db\_name) | Jump server database name | `string` | `"jumpserver"` | no |
+| <a name="input_jump_db_password"></a> [jump\_db\_password](#input\_jump\_db\_password) | Jump server database password. If not provided and enable\_jump is true, a random password will be auto-generated. | `string` | `null` | no |
+| <a name="input_jump_db_port"></a> [jump\_db\_port](#input\_jump\_db\_port) | Jump server database port | `number` | `3306` | no |
+| <a name="input_jump_db_user"></a> [jump\_db\_user](#input\_jump\_db\_user) | Jump server database user | `string` | `"root"` | no |
+| <a name="input_jump_docker_subnet"></a> [jump\_docker\_subnet](#input\_jump\_docker\_subnet) | Jump server Docker subnet CIDR | `string` | `"192.168.250.0/24"` | no |
+| <a name="input_jump_http_port"></a> [jump\_http\_port](#input\_jump\_http\_port) | Jump server HTTP port | `number` | `80` | no |
+| <a name="input_jump_log_level"></a> [jump\_log\_level](#input\_jump\_log\_level) | Jump server log level (ERROR, WARNING, INFO, DEBUG) | `string` | `"ERROR"` | no |
+| <a name="input_jump_rdp_port"></a> [jump\_rdp\_port](#input\_jump\_rdp\_port) | Jump server RDP port | `number` | `3389` | no |
+| <a name="input_jump_redis_host"></a> [jump\_redis\_host](#input\_jump\_redis\_host) | Jump server Redis host (use 'localhost' for local Redis, or ElastiCache endpoint for external Redis) | `string` | `"localhost"` | no |
+| <a name="input_jump_redis_password"></a> [jump\_redis\_password](#input\_jump\_redis\_password) | Jump server Redis password. If not provided and enable\_jump is true, a random password will be auto-generated. Set to empty string to disable password. | `string` | `null` | no |
+| <a name="input_jump_redis_port"></a> [jump\_redis\_port](#input\_jump\_redis\_port) | Jump server Redis port | `number` | `6379` | no |
+| <a name="input_jump_secret_key"></a> [jump\_secret\_key](#input\_jump\_secret\_key) | Jump server SECRET\_KEY (50+ characters). If not provided, will be auto-generated | `string` | `null` | no |
+| <a name="input_jump_ssh_port"></a> [jump\_ssh\_port](#input\_jump\_ssh\_port) | Jump server SSH port | `number` | `22` | no |
+| <a name="input_jump_version"></a> [jump\_version](#input\_jump\_version) | Jump server version to install (e.g., v2.28.8) | `string` | `"v2.28.8"` | no |
+| <a name="input_key_name"></a> [key\_name](#input\_key\_name) | Name of the AWS EC2 Key Pair to use for SSH access (optional: if key\_path is provided and file exists, it will be automatically uploaded and used as default) | `string` | `null` | no |
+| <a name="input_key_path"></a> [key\_path](#input\_key\_path) | Path to SSH public key file (e.g., ~/.ssh/ec2-production.pub). If provided and file exists with non-empty content, will automatically create EC2 Key Pair. Recommended format: ~/.ssh/{name\_prefix}-{environment}.pub where {environment} matches the environment variable value | `string` | `null` | no |
+| <a name="input_metadata_options"></a> [metadata\_options](#input\_metadata\_options) | Instance metadata options | <pre>object({<br/>    http_endpoint               = optional(string, "enabled")<br/>    http_tokens                 = optional(string, "required")<br/>    http_put_response_hop_limit = optional(number, 2)<br/>    instance_metadata_tags      = optional(string, "enabled")<br/>  })</pre> | `{}` | no |
+| <a name="input_name_prefix"></a> [name\_prefix](#input\_name\_prefix) | Prefix for resource names (e.g., 'web', 'app', 'ec2'). Defaults to 'ec2' | `string` | `"ec2"` | no |
+| <a name="input_netbird_enabled"></a> [netbird\_enabled](#input\_netbird\_enabled) | Enable NetBird VPN client installation on instances. When enabled, automatically installs NetBird and connects to the NetBird network using the setup key | `bool` | `false` | no |
+| <a name="input_netbird_management_url"></a> [netbird\_management\_url](#input\_netbird\_management\_url) | NetBird management URL (optional). If not specified, uses the default NetBird cloud management. Use this if you have a self-hosted NetBird management server | `string` | `null` | no |
+| <a name="input_netbird_setup_key"></a> [netbird\_setup\_key](#input\_netbird\_setup\_key) | NetBird setup key for connecting to the NetBird network. Required when netbird\_enabled is true. Get this from your NetBird Management Dashboard | `string` | `null` | no |
+| <a name="input_os_type"></a> [os\_type](#input\_os\_type) | Operating system type. Options: ubuntu, amazon-linux, rhel, debian | `string` | `"ubuntu"` | no |
+| <a name="input_os_version"></a> [os\_version](#input\_os\_version) | Operating system version. For Ubuntu: 24.04. For Amazon Linux: 2023. For RHEL: 8 or 9. For Debian: 12 or 11 | `string` | `"24.04"` | no |
+| <a name="input_owner"></a> [owner](#input\_owner) | Owner of the resources | `string` | `""` | no |
+| <a name="input_private_subnet_ids"></a> [private\_subnet\_ids](#input\_private\_subnet\_ids) | Private subnet IDs when not using VPC remote state | `list(string)` | `[]` | no |
+| <a name="input_project"></a> [project](#input\_project) | Project name | `string` | `""` | no |
+| <a name="input_public_subnet_ids"></a> [public\_subnet\_ids](#input\_public\_subnet\_ids) | Public subnet IDs when not using VPC remote state | `list(string)` | `[]` | no |
+| <a name="input_region"></a> [region](#input\_region) | AWS region | `string` | `"us-east-1"` | no |
+| <a name="input_security_group_ids"></a> [security\_group\_ids](#input\_security\_group\_ids) | List of security group IDs to attach to instances. If not specified, uses VPC security group or creates new security group based on security\_group\_rules | `list(string)` | `null` | no |
+| <a name="input_security_group_rules"></a> [security\_group\_rules](#input\_security\_group\_rules) | Map of security group rules to create a new security group. Format: { rule\_name => { type = "ingress"\|"egress", from\_port = 22, to\_port = 22, protocol = "tcp", cidr\_blocks = ["0.0.0.0/0"] } } | <pre>map(object({<br/>    type                     = string<br/>    from_port                = number<br/>    to_port                  = number<br/>    protocol                 = string<br/>    cidr_blocks              = optional(list(string), [])<br/>    ipv6_cidr_blocks         = optional(list(string), [])<br/>    prefix_list_ids          = optional(list(string), [])<br/>    source_security_group_id = optional(string, null)<br/>    description              = optional(string, "")<br/>  }))</pre> | `{}` | no |
+| <a name="input_spot_instance_enabled"></a> [spot\_instance\_enabled](#input\_spot\_instance\_enabled) | Enable Spot instance for cost optimization. Spot instances can be interrupted with 2-minute notice. Not recommended for production workloads. | `bool` | `false` | no |
+| <a name="input_spot_instance_type"></a> [spot\_instance\_type](#input\_spot\_instance\_type) | Instance type for Spot instance (optional). If not specified, uses the same instance\_type as on-demand instances. | `string` | `null` | no |
+| <a name="input_spot_interruption_behavior"></a> [spot\_interruption\_behavior](#input\_spot\_interruption\_behavior) | Behavior when Spot instance is interrupted. Options: stop, terminate, hibernate | `string` | `"terminate"` | no |
+| <a name="input_spot_max_price"></a> [spot\_max\_price](#input\_spot\_max\_price) | Maximum price per hour for Spot instance. If not specified, uses current Spot price. This is an alias for spot\_price for clarity. | `string` | `null` | no |
+| <a name="input_spot_price"></a> [spot\_price](#input\_spot\_price) | Maximum price per hour for Spot instance (optional). If not specified, uses current Spot price. | `string` | `null` | no |
+| <a name="input_subnet_id"></a> [subnet\_id](#input\_subnet\_id) | Subnet ID for instances (if not specified, uses first public subnet from VPC). Use subnet\_type or subnet\_ids in instance configuration instead | `string` | `null` | no |
+| <a name="input_subnet_type"></a> [subnet\_type](#input\_subnet\_type) | Subnet type to use when subnet\_id is not specified (public, private, database). Defaults to public | `string` | `"public"` | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | Additional tags to apply to all resources | `map(string)` | `{}` | no |
+| <a name="input_ubuntu_version"></a> [ubuntu\_version](#input\_ubuntu\_version) | Ubuntu version to use when using SSM Parameter Store (24.04). Only used when ami\_id is null and os\_type is ubuntu. Deprecated: use os\_type and os\_version instead | `string` | `"24.04"` | no |
+| <a name="input_user_data"></a> [user\_data](#input\_user\_data) | User data script content. If provided, overrides userdata\_script\_path. Can be used for custom initialization scripts | `string` | `null` | no |
+| <a name="input_userdata_script_path"></a> [userdata\_script\_path](#input\_userdata\_script\_path) | Path to the userdata script file (relative to module root or absolute path). Used when enable\_jump is false. Use minimal version for EC2 to avoid 16KB limit. | `string` | `null` | no |
+| <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | VPC ID. Required when vpc\_remote\_state\_bucket is null. | `string` | `null` | no |
+| <a name="input_vpc_remote_state_bucket"></a> [vpc\_remote\_state\_bucket](#input\_vpc\_remote\_state\_bucket) | S3 bucket for VPC remote state. Optional when vpc\_id and subnet IDs are passed directly. | `string` | `null` | no |
+| <a name="input_vpc_remote_state_key"></a> [vpc\_remote\_state\_key](#input\_vpc\_remote\_state\_key) | Remote state key for VPC module. Must match the key in your VPC module's backend.tf configuration. Example: 'ACCOUNT/terraform-aws-modules:vpc/examples/basic/terraform.tfstate' | `string` | `"vpc/terraform.tfstate"` | no |
+| <a name="input_vpc_remote_state_workspace_key_prefix"></a> [vpc\_remote\_state\_workspace\_key\_prefix](#input\_vpc\_remote\_state\_workspace\_key\_prefix) | Workspace key prefix for VPC remote state. Must match the workspace\_key\_prefix in your VPC module's backend.tf configuration. Example: 'env:development' or 'env:' | `string` | `"env:"` | no |
+
+## Outputs
+
+| Name | Description |
+| ---- | ----------- |
+| <a name="output_alb_arn"></a> [alb\_arn](#output\_alb\_arn) | ARN of the Application Load Balancer |
+| <a name="output_alb_dns_name"></a> [alb\_dns\_name](#output\_alb\_dns\_name) | DNS name of the Application Load Balancer |
+| <a name="output_alb_id"></a> [alb\_id](#output\_alb\_id) | ID of the Application Load Balancer |
+| <a name="output_alb_listener_arn"></a> [alb\_listener\_arn](#output\_alb\_listener\_arn) | ARN of the ALB listener |
+| <a name="output_alb_listener_id"></a> [alb\_listener\_id](#output\_alb\_listener\_id) | ID of the ALB listener |
+| <a name="output_alb_security_group_id"></a> [alb\_security\_group\_id](#output\_alb\_security\_group\_id) | ID of the ALB security group |
+| <a name="output_alb_target_group_arn"></a> [alb\_target\_group\_arn](#output\_alb\_target\_group\_arn) | ARN of the ALB target group |
+| <a name="output_alb_target_group_id"></a> [alb\_target\_group\_id](#output\_alb\_target\_group\_id) | ID of the ALB target group |
+| <a name="output_alb_zone_id"></a> [alb\_zone\_id](#output\_alb\_zone\_id) | Zone ID of the Application Load Balancer |
+| <a name="output_asg_arn"></a> [asg\_arn](#output\_asg\_arn) | ARN of the Auto Scaling Group (if enabled) |
+| <a name="output_asg_desired_capacity"></a> [asg\_desired\_capacity](#output\_asg\_desired\_capacity) | Desired capacity of the Auto Scaling Group |
+| <a name="output_asg_id"></a> [asg\_id](#output\_asg\_id) | ID of the Auto Scaling Group (if enabled) |
+| <a name="output_asg_max_size"></a> [asg\_max\_size](#output\_asg\_max\_size) | Maximum size of the Auto Scaling Group |
+| <a name="output_asg_min_size"></a> [asg\_min\_size](#output\_asg\_min\_size) | Minimum size of the Auto Scaling Group |
+| <a name="output_asg_name"></a> [asg\_name](#output\_asg\_name) | Name of the Auto Scaling Group (if enabled) |
+| <a name="output_cloudwatch_log_group_arn"></a> [cloudwatch\_log\_group\_arn](#output\_cloudwatch\_log\_group\_arn) | ARN of the CloudWatch Logs group (if enabled) |
+| <a name="output_cloudwatch_log_group_name"></a> [cloudwatch\_log\_group\_name](#output\_cloudwatch\_log\_group\_name) | Name of the CloudWatch Logs group (if enabled) |
+| <a name="output_dns_name"></a> [dns\_name](#output\_dns\_name) | DNS name of the first EC2 instance |
+| <a name="output_dns_name_private"></a> [dns\_name\_private](#output\_dns\_name\_private) | Private/internal DNS name of the first EC2 instance |
+| <a name="output_dns_names"></a> [dns\_names](#output\_dns\_names) | Map of DNS names for EC2 instances |
+| <a name="output_dns_names_private"></a> [dns\_names\_private](#output\_dns\_names\_private) | Map of private/internal DNS names for EC2 instances |
+| <a name="output_ec2_name"></a> [ec2\_name](#output\_ec2\_name) | Name of the EC2 module (for reference) |
+| <a name="output_elastic_ip_ids"></a> [elastic\_ip\_ids](#output\_elastic\_ip\_ids) | Map of Elastic IP allocation IDs by instance hostname (if enable\_eip is true) |
+| <a name="output_elastic_ips"></a> [elastic\_ips](#output\_elastic\_ips) | Map of Elastic IP addresses by instance hostname (if enable\_eip is true) |
+| <a name="output_elb_dns_name"></a> [elb\_dns\_name](#output\_elb\_dns\_name) | DNS name of the Classic Load Balancer |
+| <a name="output_elb_id"></a> [elb\_id](#output\_elb\_id) | ID of the Classic Load Balancer |
+| <a name="output_elb_name"></a> [elb\_name](#output\_elb\_name) | Name of the Classic Load Balancer |
+| <a name="output_elb_security_group_id"></a> [elb\_security\_group\_id](#output\_elb\_security\_group\_id) | ID of the ELB security group |
+| <a name="output_elb_source_security_group_id"></a> [elb\_source\_security\_group\_id](#output\_elb\_source\_security\_group\_id) | ID of the source security group for ELB |
+| <a name="output_elb_zone_id"></a> [elb\_zone\_id](#output\_elb\_zone\_id) | Zone ID of the Classic Load Balancer |
+| <a name="output_gitlab_access_url"></a> [gitlab\_access\_url](#output\_gitlab\_access\_url) | GitLab web access URL (HTTP/HTTPS) - uses external\_url if set, otherwise DNS name or IP address |
+| <a name="output_gitlab_enabled"></a> [gitlab\_enabled](#output\_gitlab\_enabled) | Whether GitLab is enabled on the EC2 instance |
+| <a name="output_gitlab_https_url"></a> [gitlab\_https\_url](#output\_gitlab\_https\_url) | GitLab HTTPS access URL - uses project-based DNS name (e.g., gitlab.production.example.com) if ALB and DNS are enabled with HTTPS, otherwise uses external\_url if it's HTTPS, otherwise null |
+| <a name="output_iam_instance_profile_name"></a> [iam\_instance\_profile\_name](#output\_iam\_instance\_profile\_name) | Name of the IAM instance profile attached to instances |
+| <a name="output_iam_role_arn"></a> [iam\_role\_arn](#output\_iam\_role\_arn) | ARN of the IAM role attached to instances |
+| <a name="output_instance_arn"></a> [instance\_arn](#output\_instance\_arn) | ARN of the first EC2 instance |
+| <a name="output_instance_dns"></a> [instance\_dns](#output\_instance\_dns) | Public DNS name of the first EC2 instance |
+| <a name="output_instance_elastic_ip"></a> [instance\_elastic\_ip](#output\_instance\_elastic\_ip) | Elastic IP address of the first EC2 instance (if enable\_eip is true) |
+| <a name="output_instance_id"></a> [instance\_id](#output\_instance\_id) | ID of the first EC2 instance |
+| <a name="output_instance_ids"></a> [instance\_ids](#output\_instance\_ids) | Map of instance IDs by instance name |
+| <a name="output_instance_ipv6_addresses"></a> [instance\_ipv6\_addresses](#output\_instance\_ipv6\_addresses) | IPv6 addresses of the first EC2 instance (if IPv6 enabled) |
+| <a name="output_instance_ipv6_addresses_map"></a> [instance\_ipv6\_addresses\_map](#output\_instance\_ipv6\_addresses\_map) | Map of IPv6 addresses by instance name (if IPv6 enabled) |
+| <a name="output_instance_private_ip"></a> [instance\_private\_ip](#output\_instance\_private\_ip) | Private IP address of the first EC2 instance |
+| <a name="output_instance_private_ips"></a> [instance\_private\_ips](#output\_instance\_private\_ips) | Map of private IP addresses by instance name |
+| <a name="output_instance_public_ip"></a> [instance\_public\_ip](#output\_instance\_public\_ip) | Public IP address of the first EC2 instance (Elastic IP if enable\_eip is true, otherwise auto-assigned public IP) |
+| <a name="output_instance_public_ips"></a> [instance\_public\_ips](#output\_instance\_public\_ips) | Map of public IP addresses by instance name (Elastic IP if enable\_eip is true, otherwise auto-assigned public IP) |
+| <a name="output_instances"></a> [instances](#output\_instances) | Map of all EC2 instances (empty if ASG is enabled) |
+| <a name="output_jump_access_url"></a> [jump\_access\_url](#output\_jump\_access\_url) | Jump server web access URL (HTTP) - uses DNS name if available, otherwise IP address |
+| <a name="output_jump_admin_info"></a> [jump\_admin\_info](#output\_jump\_admin\_info) | Jump server Web UI admin credentials and access information |
+| <a name="output_jump_bootstrap_token"></a> [jump\_bootstrap\_token](#output\_jump\_bootstrap\_token) | Jump server BOOTSTRAP\_TOKEN (sensitive, auto-generated on server if not provided) |
+| <a name="output_jump_db_password"></a> [jump\_db\_password](#output\_jump\_db\_password) | Jump server database password (sensitive) |
+| <a name="output_jump_dns_names"></a> [jump\_dns\_names](#output\_jump\_dns\_names) | [DEPRECATED] Map of DNS names for EC2 instances. Use dns\_names instead. |
+| <a name="output_jump_enabled"></a> [jump\_enabled](#output\_jump\_enabled) | Whether jump server is enabled on the EC2 instance |
+| <a name="output_jump_https_url"></a> [jump\_https\_url](#output\_jump\_https\_url) | Jump server HTTPS access URL - uses project-based DNS name (e.g., jump.production.example.com) if ALB and DNS are enabled with HTTPS, otherwise null |
+| <a name="output_jump_instance_id"></a> [jump\_instance\_id](#output\_jump\_instance\_id) | [DEPRECATED] ID of the first EC2 instance. Use instance\_id instead. |
+| <a name="output_jump_instance_ids"></a> [jump\_instance\_ids](#output\_jump\_instance\_ids) | [DEPRECATED] Map of instance IDs by instance name. Use instance\_ids instead. |
+| <a name="output_jump_instance_private_ip"></a> [jump\_instance\_private\_ip](#output\_jump\_instance\_private\_ip) | [DEPRECATED] Private IP address of the first EC2 instance. Use instance\_private\_ip instead. |
+| <a name="output_jump_instance_private_ips"></a> [jump\_instance\_private\_ips](#output\_jump\_instance\_private\_ips) | [DEPRECATED] Map of private IP addresses by instance name. Use instance\_private\_ips instead. |
+| <a name="output_jump_instance_public_ip"></a> [jump\_instance\_public\_ip](#output\_jump\_instance\_public\_ip) | [DEPRECATED] Public IP address of the first EC2 instance. Use instance\_public\_ip instead. |
+| <a name="output_jump_instance_public_ips"></a> [jump\_instance\_public\_ips](#output\_jump\_instance\_public\_ips) | [DEPRECATED] Map of public IP addresses by instance name. Use instance\_public\_ips instead. |
+| <a name="output_jump_instances"></a> [jump\_instances](#output\_jump\_instances) | [DEPRECATED] Map of all EC2 instances. Use instances instead. |
+| <a name="output_jump_password_reset"></a> [jump\_password\_reset](#output\_jump\_password\_reset) | How to reset jump server Web UI admin password |
+| <a name="output_jump_rdp_port"></a> [jump\_rdp\_port](#output\_jump\_rdp\_port) | Jump server RDP port |
+| <a name="output_jump_redis_password"></a> [jump\_redis\_password](#output\_jump\_redis\_password) | Jump server Redis password (sensitive) |
+| <a name="output_jump_secret_key"></a> [jump\_secret\_key](#output\_jump\_secret\_key) | Jump server SECRET\_KEY (sensitive, auto-generated on server if not provided) |
+| <a name="output_jump_security_group_id"></a> [jump\_security\_group\_id](#output\_jump\_security\_group\_id) | [DEPRECATED] ID of the security group. Use security\_group\_id instead. |
+| <a name="output_jump_ssh_port"></a> [jump\_ssh\_port](#output\_jump\_ssh\_port) | Jump server SSH port |
+| <a name="output_jumpserver_access_url"></a> [jumpserver\_access\_url](#output\_jumpserver\_access\_url) | [DEPRECATED] Jump server web access URL map. Use jump\_access\_url instead. |
+| <a name="output_jumpserver_enabled"></a> [jumpserver\_enabled](#output\_jumpserver\_enabled) | [DEPRECATED] Whether jump server is enabled. Use jump\_enabled instead. |
+| <a name="output_key_pair_id"></a> [key\_pair\_id](#output\_key\_pair\_id) | ID of the auto-created EC2 Key Pair (if key\_path file exists and is not empty) |
+| <a name="output_key_pair_name"></a> [key\_pair\_name](#output\_key\_pair\_name) | Name of the EC2 Key Pair used (auto-created from key\_path if exists, otherwise from var.key\_name) |
+| <a name="output_key_path_status"></a> [key\_path\_status](#output\_key\_path\_status) | Status of key\_path file check (for debugging) |
+| <a name="output_launch_template_arn"></a> [launch\_template\_arn](#output\_launch\_template\_arn) | ARN of the Launch Template (if ASG enabled) |
+| <a name="output_launch_template_id"></a> [launch\_template\_id](#output\_launch\_template\_id) | ID of the Launch Template (if ASG enabled) |
+| <a name="output_netbird_enabled"></a> [netbird\_enabled](#output\_netbird\_enabled) | Whether NetBird is enabled on the EC2 instance |
+| <a name="output_netbird_setup_key"></a> [netbird\_setup\_key](#output\_netbird\_setup\_key) | NetBird setup key for connecting to the NetBird network (sensitive) |
+| <a name="output_security_group_arn"></a> [security\_group\_arn](#output\_security\_group\_arn) | ARN of the security group (always created) |
+| <a name="output_security_group_arn_from_vpc"></a> [security\_group\_arn\_from\_vpc](#output\_security\_group\_arn\_from\_vpc) | ARN of the security group from VPC module (if using VPC security group) |
+| <a name="output_security_group_id"></a> [security\_group\_id](#output\_security\_group\_id) | ID of the security group (always created) |
+| <a name="output_security_group_id_from_vpc"></a> [security\_group\_id\_from\_vpc](#output\_security\_group\_id\_from\_vpc) | ID of the security group from VPC module (if using VPC security group) |
+| <a name="output_ssh_config_file_content"></a> [ssh\_config\_file\_content](#output\_ssh\_config\_file\_content) | Content of the generated SSH config file |
+| <a name="output_ssh_config_file_path"></a> [ssh\_config\_file\_path](#output\_ssh\_config\_file\_path) | Path to the generated SSH config file |
+| <a name="output_ssm_session_commands"></a> [ssm\_session\_commands](#output\_ssm\_session\_commands) | SSM Session Manager commands to connect to instances (if enabled) |
+| <a name="output_ssm_session_manager_enabled"></a> [ssm\_session\_manager\_enabled](#output\_ssm\_session\_manager\_enabled) | Whether SSM Session Manager is enabled for instances |
+| <a name="output_zzz_reminder_access_commands"></a> [zzz\_reminder\_access\_commands](#output\_zzz\_reminder\_access\_commands) | ⚠️ REMINDER: Access commands and important information after EC2 deployment |
+| <a name="output_zzz_reminders"></a> [zzz\_reminders](#output\_zzz\_reminders) | 📝 REMINDER: Useful commands and next steps after EC2 deployment |
+| <a name="output_zzz_sensitive_access_info"></a> [zzz\_sensitive\_access\_info](#output\_zzz\_sensitive\_access\_info) | 🔐 SENSITIVE: Access information for sensitive data (passwords, tokens, keys, etc.) |
+| <a name="output_zzz_sensitive_reminder"></a> [zzz\_sensitive\_reminder](#output\_zzz\_sensitive\_reminder) | ⚠️  REMINDER: How to access sensitive information (passwords, tokens, etc.) |
+<!-- END_TF_DOCS -->

@@ -13,6 +13,7 @@ locals {
       Environment = var.environment
       Project     = var.project
       ManagedBy   = "terraform"
+      Module      = "github.com/hanyouqing/terraform-aws-modules/vpc"
       Code        = var.code
       Owner       = var.owner
     },

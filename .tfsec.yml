@@ -1,0 +1,30 @@
+# =============================================================================
+# TFSec Configuration
+# =============================================================================
+#
+# Usage:
+#   tfsec .
+#   tfsec --exclude-downloaded-modules
+#
+# Documentation: https://aquasecurity.github.io/tfsec/
+# =============================================================================
+
+minimum_severity: LOW
+include_passed: false
+include_ignored: false
+
+excluded_directories:
+  - ".terraform"
+  - ".terraform/**"
+  - "**/.terraform"
+  - "**/.terraform/**"
+  - ".git"
+  - ".git/**"
+  - "**/examples/**"
+  - "terragrunt/**"
+
+exclude_downloaded_modules: true
+
+# Common AWS ignore guidance (prefer fixing over excluding):
+#   # tfsec:ignore:aws-s3-enable-bucket-encryption
+#   # tfsec:ignore:aws-ec2-no-public-ingress-sgr

@@ -1,20 +1,17 @@
 terraform {
-  required_version = "~> 1.14"
+  required_version = ">= 1.14.2"
 
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 6.26"
+      version = "~> 6.28"
     }
   }
 }
 
 provider "aws" {
-  region     = var.region
-  access_key = var.aws_access_key
-  secret_key = var.aws_secret_key
-  profile    = var.aws_profile
-  token      = var.aws_session_token
+  region  = var.region
+  profile = var.aws_profile
 
   dynamic "assume_role" {
     for_each = var.aws_assume_role_arn != null ? [1] : []
@@ -101,11 +98,11 @@ resource "aws_iam_role_policy" "allow_assume_role" {
           "sts:AssumeRole"
         ]
         Resource = [
-          "arn:aws:iam::${var.main_account_id}:role/${each.value.target_role_name}"
+          "arn:aws:iam::${var.main_account_id}:role/${var.team_roles[each.key].target_role_name}"
         ]
         Condition = {
           StringEquals = {
-            "sts:ExternalId" = each.value.external_id
+            "sts:ExternalId" = var.team_roles[each.key].external_id
           }
         }
       }

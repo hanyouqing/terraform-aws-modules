@@ -4,19 +4,7 @@ variable "region" {
   default     = "us-east-1"
 }
 
-variable "aws_access_key" {
-  description = "AWS access key ID. Can be set via AWS_ACCESS_KEY_ID environment variable."
-  type        = string
-  default     = null
-  sensitive   = true
-}
 
-variable "aws_secret_key" {
-  description = "AWS secret access key. Can be set via AWS_SECRET_ACCESS_KEY environment variable."
-  type        = string
-  default     = null
-  sensitive   = true
-}
 
 variable "aws_profile" {
   description = "AWS profile name from ~/.aws/credentials. Can be set via AWS_PROFILE environment variable."
@@ -24,12 +12,6 @@ variable "aws_profile" {
   default     = null
 }
 
-variable "aws_session_token" {
-  description = "AWS session token for temporary credentials. Can be set via AWS_SESSION_TOKEN environment variable."
-  type        = string
-  default     = null
-  sensitive   = true
-}
 
 variable "aws_assume_role_arn" {
   description = "ARN of the IAM role to assume. Use this to assume OrganizationAccountAccessRole in main account."
@@ -62,11 +44,11 @@ variable "main_account_id" {
 variable "team_roles" {
   description = "Map of team roles to create in main account"
   type = map(object({
-    role_name          = string
-    assume_role_name   = string
-    external_id        = string
-    policy_arns        = optional(list(string), [])
-    inline_policies    = optional(list(object({
+    role_name        = string
+    assume_role_name = string
+    external_id      = string
+    policy_arns      = optional(list(string), [])
+    inline_policies = optional(list(object({
       Effect   = string
       Action   = list(string)
       Resource = list(string)

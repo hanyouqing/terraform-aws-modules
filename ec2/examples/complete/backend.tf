@@ -13,7 +13,7 @@
 terraform {
   backend "s3" {
     bucket               = "terraform-aws-modules-example-state"
-    key                  = "hanyouqing/terraform-aws-modules:ec2/examples/complete/terraform.tfstate"
+    key                  = "ACCOUNT/terraform-aws-modules:ec2/examples/complete/terraform.tfstate"
     region               = "us-east-1"
     encrypt              = true
     use_lockfile         = true

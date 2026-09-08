@@ -7,13 +7,18 @@ variable "region" {
 variable "project" {
   description = "Project name"
   type        = string
-  default     = "identity-main"
+  default     = "ihomelabs"
 }
 
 variable "environment" {
   description = "Environment name"
   type        = string
   default     = "production"
+
+  validation {
+    condition     = contains(["development", "testing", "staging", "production"], var.environment)
+    error_message = "Environment must be one of: development, testing, staging, production."
+  }
 }
 
 variable "tags" {
@@ -27,6 +32,7 @@ variable "accounts" {
   type = list(object({
     name                       = string
     email                      = string
+    parent_id                  = optional(string, null)
     iam_user_access_to_billing = optional(string, "ALLOW")
     role_name                  = optional(string, "OrganizationAccountAccessRole")
     close_on_deletion          = optional(bool, false)

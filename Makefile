@@ -19,10 +19,10 @@ TFSEC_VERSION := v1.28.1
 CHECKOV_VERSION := 3.1.0
 
 # Find all modules (directories with versions.tf, excluding .terraform and examples)
-MODULES := $(shell find . -name "versions.tf" -not -path "*/.terraform/*" -not -path "*/examples/*" -not -path "*/.terraform" | xargs dirname | sort | uniq | grep -v "^\./\.terraform")
+MODULES := $(shell find . -name "versions.tf" -not -path "*/.terraform/*" -not -path "*/examples/*" -not -path "*/terragrunt/*" | sed 's|/versions.tf||' | sort -u)
 
 # Find all examples (directories with main.tf in examples/)
-EXAMPLES := $(shell find . -path "*/examples/*/main.tf" -not -path "*/.terraform/*" | xargs dirname | sort | uniq)
+EXAMPLES := $(shell find . -path "*/examples/*/main.tf" -not -path "*/.terraform/*" | sed 's|/main.tf||' | sort -u)
 
 # Terraform files pattern
 TF_FILES := $(shell find . -name "*.tf" -not -path "./.terraform/*" -not -path "./examples/*")
@@ -121,6 +121,10 @@ validate-example: ## Validate a specific example (usage: make validate-example E
 # Linting
 # ==============================================================================
 
+lint-init: ## Initialize tflint plugins
+	@tflint --init --config .tflint.hcl
+	@echo "$(GREEN)✓ tflint plugins initialized$(NC)"
+
 lint: ## Run tflint on all modules
 	@echo "$(BLUE)Running tflint...$(NC)"
 	@if ! command -v tflint > /dev/null; then \
@@ -129,7 +133,7 @@ lint: ## Run tflint on all modules
 	fi
 	@for module in $(MODULES); do \
 		echo "$(YELLOW)Linting $$module...$(NC)"; \
-		cd $$module && tflint --init > /dev/null 2>&1 && tflint || echo "$(YELLOW)⚠ Linting issues found in $$module$(NC)"; \
+		tflint --config $(CURDIR)/.tflint.hcl --chdir $$module --init > /dev/null 2>&1; tflint --config $(CURDIR)/.tflint.hcl --chdir $$module || echo "$(YELLOW)⚠ Linting issues found in $$module$(NC)"; \
 	done
 	@echo "$(GREEN)✓ Linting complete$(NC)"
 
@@ -144,7 +148,7 @@ lint-module: ## Lint a specific module (usage: make lint-module MODULE=vpc)
 		exit 1; \
 	fi
 	@echo "$(BLUE)Linting module: $(MODULE)$(NC)"
-	@cd $(MODULE) && tflint --init && tflint
+	@tflint --config $(CURDIR)/.tflint.hcl --chdir $(MODULE) --init && tflint --config $(CURDIR)/.tflint.hcl --chdir $(MODULE)
 
 # ==============================================================================
 # Security Scanning
@@ -161,7 +165,7 @@ tfsec: ## Run tfsec security scanner
 		echo "$(YELLOW)tfsec not found. Install with: make install-tfsec$(NC)"; \
 		exit 1; \
 	fi
-	@tfsec . --exclude-downloaded-modules || echo "$(YELLOW)⚠ Security issues found$(NC)"
+	@tfsec . --config-file .tfsec.yml --exclude-downloaded-modules || echo "$(YELLOW)⚠ Security issues found$(NC)"
 	@echo "$(GREEN)✓ tfsec scan complete$(NC)"
 
 checkov: ## Run checkov security scanner
@@ -185,7 +189,7 @@ docs: ## Generate documentation for all modules
 	fi
 	@for module in $(MODULES); do \
 		echo "$(YELLOW)Generating docs for $$module...$(NC)"; \
-		terraform-docs markdown table --output-file README.md --output-mode inject $$module || echo "$(YELLOW)⚠ Failed to generate docs for $$module$(NC)"; \
+		(cd $$module && terraform-docs --config $(CURDIR)/.terraform-docs.yml .) || echo "$(YELLOW)⚠ Failed to generate docs for $$module$(NC)"; \
 	done
 	@echo "$(GREEN)✓ Documentation generation complete$(NC)"
 
@@ -200,7 +204,7 @@ docs-module: ## Generate documentation for a specific module (usage: make docs-m
 		exit 1; \
 	fi
 	@echo "$(BLUE)Generating documentation for module: $(MODULE)$(NC)"
-	@terraform-docs markdown table --output-file README.md --output-mode inject $(MODULE)
+	@cd $(MODULE) && terraform-docs --config $(CURDIR)/.terraform-docs.yml .
 
 # ==============================================================================
 # Terraform Operations

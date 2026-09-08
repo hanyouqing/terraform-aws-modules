@@ -1,0 +1,111 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  fmt:
+    name: Terraform Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "~> 1.14"
+      - name: Check formatting
+        run: terraform fmt -check -recursive
+
+  validate:
+    name: Terraform Validate
+    runs-on: ubuntu-latest
+    needs: fmt
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - modules
+          - examples
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "~> 1.14"
+      - name: Create plugin cache dir
+        run: mkdir -p "$HOME/.terraform.d/plugin-cache"
+      - name: Validate modules
+        if: matrix.target == 'modules'
+        run: |
+          set -euo pipefail
+          for dir in $(find . -name 'versions.tf' \
+            -not -path '*/.terraform/*' \
+            -not -path '*/examples/*' \
+            -not -path '*/terragrunt/*' \
+            | sed 's|/versions.tf||' | sort -u); do
+            echo "::group::Validating $dir"
+            (cd "$dir" && terraform init -backend=false -input=false > /dev/null && terraform validate)
+            echo "::endgroup::"
+          done
+      - name: Validate examples
+        if: matrix.target == 'examples'
+        run: |
+          set -euo pipefail
+          for dir in $(find . -type f -name 'main.tf' -path '*/examples/*' \
+            -not -path '*/.terraform/*' -not -path '*/.terragrunt-cache/*' \
+            | sed 's|/main.tf||' | sort -u); do
+            echo "::group::Validating $dir"
+            (cd "$dir" && terraform init -backend=false -input=false > /dev/null && terraform validate)
+            echo "::endgroup::"
+          done
+
+  lint:
+    name: TFLint
+    runs-on: ubuntu-latest
+    needs: fmt
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "~> 1.14"
+      - uses: terraform-linters/setup-tflint@v4
+        with:
+          tflint_version: latest
+      - name: Init TFLint
+        run: tflint --init --config .tflint.hcl
+      - name: Run TFLint
+        run: tflint --config .tflint.hcl --recursive
+
+  docs-check:
+    name: Docs Drift Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install terraform-docs
+        run: |
+          TFDOCS_VERSION="v0.19.0"
+          curl -sSLo terraform-docs.tar.gz \
+            "https://github.com/terraform-docs/terraform-docs/releases/download/${TFDOCS_VERSION}/terraform-docs-${TFDOCS_VERSION}-linux-amd64.tar.gz"
+          tar -xzf terraform-docs.tar.gz terraform-docs
+          chmod +x terraform-docs
+          sudo mv terraform-docs /usr/local/bin/
+      - name: Regenerate docs and check for drift
+        run: |
+          set -euo pipefail
+          ROOT="$(pwd)"
+          for dir in $(find . -name 'versions.tf' \
+            -not -path '*/.terraform/*' \
+            -not -path '*/examples/*' \
+            -not -path '*/terragrunt/*' \
+            | sed 's|/versions.tf||' | sort -u); do
+            (cd "$dir" && terraform-docs --config "$ROOT/.terraform-docs.yml" .)
+          done
+          if ! git diff --quiet; then
+            echo "::error::Documentation is out of date. Run 'make docs' and commit the changes."
+            git --no-pager diff --stat
+            exit 1
+          fi

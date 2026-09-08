@@ -96,12 +96,12 @@ output "instance_dns" {
 
 output "security_group_id_from_vpc" {
   description = "ID of the security group from VPC module (if using VPC security group)"
-  value       = try(data.terraform_remote_state.vpc.outputs.jump_security_group_id, null)
+  value       = try(local.vpc_remote.jump_security_group_id, null)
 }
 
 output "security_group_arn_from_vpc" {
   description = "ARN of the security group from VPC module (if using VPC security group)"
-  value       = try(data.terraform_remote_state.vpc.outputs.jump_security_group_arn, null)
+  value       = try(local.vpc_remote.jump_security_group_arn, null)
 }
 
 output "iam_role_arn" {
@@ -201,7 +201,7 @@ output "gitlab_access_url" {
 }
 
 output "gitlab_https_url" {
-  description = "GitLab HTTPS access URL - uses project-based DNS name (e.g., gitlab.production.aws.hanyouqing.com) if ALB and DNS are enabled with HTTPS, otherwise uses external_url if it's HTTPS, otherwise null"
+  description = "GitLab HTTPS access URL - uses project-based DNS name (e.g., gitlab.production.example.com) if ALB and DNS are enabled with HTTPS, otherwise uses external_url if it's HTTPS, otherwise null"
   value = var.gitlab_enabled && var.enable_alb && local.alb_protocol_resolved == "HTTPS" ? (
     var.gitlab_external_url != null && var.gitlab_external_url != "" && startswith(var.gitlab_external_url, "https://") ? var.gitlab_external_url : (
       local.dns_enabled && local.project_dns_name != null ? "https://${local.project_dns_name}" : (
@@ -219,7 +219,7 @@ output "jump_access_url" {
 }
 
 output "jump_https_url" {
-  description = "Jump server HTTPS access URL - uses project-based DNS name (e.g., jump.production.aws.hanyouqing.com) if ALB and DNS are enabled with HTTPS, otherwise null"
+  description = "Jump server HTTPS access URL - uses project-based DNS name (e.g., jump.production.example.com) if ALB and DNS are enabled with HTTPS, otherwise null"
   value = var.enable_jump && var.enable_alb && local.alb_protocol_resolved == "HTTPS" ? (
     local.dns_enabled && local.project_dns_name != null ? "https://${local.project_dns_name}" : (
       length(aws_lb.main) > 0 ? "https://${aws_lb.main[0].dns_name}" : null

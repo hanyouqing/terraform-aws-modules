@@ -40,7 +40,7 @@ cp terraform.tfvars.example terraform.tfvars
 3. Edit `terraform.tfvars` with your specific values (if not using .env.sh):
    - `vpc_remote_state_bucket`: S3 bucket name for VPC remote state (must match VPC backend.tf)
    - `vpc_remote_state_key`: Remote state key for VPC module (must match VPC backend.tf)
-     - Default matches VPC basic example: `hanyouqing/terraform-aws-modules:vpc/examples/basic/terraform.tfstate`
+     - Default matches VPC basic example: `ACCOUNT/terraform-aws-modules:vpc/examples/basic/terraform.tfstate`
    - `project`: Project name
    - `environment`: Environment name
    - `domain`: Base domain for DNS records (optional)

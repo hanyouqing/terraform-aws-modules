@@ -1,174 +1,88 @@
 # Terraform AWS Modules
 
-A collection of production-ready Terraform modules for AWS infrastructure.
+Production-ready Terraform modules for AWS, aligned with [`terraform-oci-modules`](https://github.com/hanyouqing/terraform-oci-modules) enterprise standards.
 
 ## Modules
 
-- **[VPC](./vpc/)**: Complete VPC setup with public, private, and database subnets
-- **[EC2](./ec2/)**: EC2 jump server (bastion host) with optional JumpServer installation
-- **[EKS](./eks/)**: Amazon EKS cluster with node groups and addons
-- **[SSO](./sso/)**: AWS IAM Identity Center (SSO) configuration
-- **[Organizations](./organizations/)**: AWS Organizations management
-- **[Lightsail](./lightsail/)**: AWS Lightsail container and database services
-- **[TFState](./tfstate/)**: Terraform state backend (S3 + DynamoDB)
+### Foundation
+
+| Module | Description |
+|--------|-------------|
+| **[vpc](./vpc/)** | Multi-AZ VPC (public/private/database), endpoints, flow logs, DNS/ACM |
+| **[tfstate](./tfstate/)** | S3 + DynamoDB remote state (IAM user/keys optional) |
+| **[organizations](./organizations/)** | Accounts, OUs, SCPs |
+
+### Compute & networking
+
+| Module | Description |
+|--------|-------------|
+| **[ec2](./ec2/)** | EC2 (+ optional JumpServer/GitLab/Netbird, ASG/ALB) |
+| **[alb](./alb/)** | Application Load Balancer, target groups, listeners |
+| **[iam-role](./iam-role/)** | IAM roles, managed/inline policies, instance profiles |
+
+### Data & containers
+
+| Module | Description |
+|--------|-------------|
+| **[s3](./s3/)** | Private encrypted buckets (map API) |
+| **[rds](./rds/)** | PostgreSQL/MySQL/MariaDB with secure defaults |
+| **[ecr](./ecr/)** | Container registries (immutable + scan-on-push) |
+
+### Security & ops
+
+| Module | Description |
+|--------|-------------|
+| **[kms](./kms/)** | Customer managed keys (rotation on) |
+| **[secrets-manager](./secrets-manager/)** | Secrets (inject values via CI, not git) |
+| **[sns](./sns/)** | Notification topics + subscriptions |
+| **[cloudwatch](./cloudwatch/)** | Log groups + metric alarms |
+
+Standards: **[GEMINI.md](./GEMINI.md)**. Pre-release review: **[docs/REVIEW_REPORT.md](./docs/REVIEW_REPORT.md)**.
 
 ## Quick Start
 
-### 1. Configure Environment Variables
-
-Copy and configure the environment variables file:
-
 ```bash
-cp .env.sh.example .env.sh
-# Edit .env.sh with your specific values
-source .env.sh
-```
+cp .env.sh.example .env.sh && source .env.sh
+export TF_CLI_CONFIG_FILE="$(pwd)/.terraformrc"
+mkdir -p ~/.terraform.d/plugin-cache
 
-### 2. Configure Terraform CLI (Optional)
-
-Copy and configure the Terraform CLI configuration:
-
-```bash
-cp .terraformrc.example .terraformrc
-# Edit .terraformrc if needed (usually defaults are fine)
-```
-
-### 3. Use Makefile (Recommended)
-
-The project includes a comprehensive Makefile with common tasks:
-
-```bash
-# Show all available commands
 make help
-
-# Format all Terraform files
-make fmt
-
-# Validate all modules
-make validate-modules
-
-# Run linting
-make lint
-
-# Run security scans
-make security
-
-# Generate documentation
-make docs
+make fmt validate-modules docs
 ```
 
-### 4. Use a Module
-
-Navigate to a module's example directory:
+### Terragrunt
 
 ```bash
-cd vpc/examples/basic
-# or
-cd ec2/examples/complete
-```
+# Bootstrap state once
+cd tfstate/examples/basic && terraform init && terraform apply
 
-### 5. Initialize and Apply
-
-```bash
-# Using Makefile
-make init
-make plan
-make apply
-
-# Or using Terraform directly
-terraform init
-terraform plan
-terraform apply
+# Configure terragrunt/personal/account.hcl, then:
+cd terragrunt/personal/us-east-1/development/vpc && terragrunt plan
 ```
 
 ## Prerequisites
 
-- Terraform >= 1.14.2
-- AWS CLI configured with appropriate credentials
-- AWS Provider ~> 6.28
+- Terraform `>= 1.14.2`
+- AWS provider `~> 6.28`
+- AWS CLI (SSO recommended)
+- Optional: Terragrunt `>= 0.55`, tflint, tfsec, terraform-docs
 
-## Environment Variables
+## Quality Gate
 
-See [.env.sh.example](./.env.sh.example) for all available environment variables.
+```bash
+make pre-commit
+make ci
+```
 
-Key variables:
-- `AWS_DEFAULT_REGION`: AWS region (default: us-east-1)
-- `TF_BACKEND_BUCKET`: S3 bucket for Terraform state
-- `TF_VAR_project`: Project name
-- `TF_VAR_environment`: Environment (development, testing, staging, production)
+CI: [.github/workflows/ci.yml](./.github/workflows/ci.yml)
 
-## Terraform Configuration
+## Hard Rules
 
-See [.terraformrc](./.terraformrc) for Terraform CLI configuration options.
-
-## Makefile Commands
-
-The project includes a comprehensive Makefile with the following categories:
-
-### Formatting
-- `make fmt` - Format all Terraform files
-- `make fmt-check` - Check if files are formatted
-- `make fmt-module MODULE=vpc` - Format a specific module
-- `make fmt-example EXAMPLE=vpc/examples/basic` - Format a specific example
-
-### Validation
-- `make validate` - Validate all modules and examples
-- `make validate-modules` - Validate all modules
-- `make validate-examples` - Validate all examples
-- `make validate-module MODULE=vpc` - Validate a specific module
-
-### Linting
-- `make lint` - Run tflint on all modules
-- `make lint-module MODULE=vpc` - Lint a specific module
-
-### Security
-- `make security` - Run security scans (tfsec and checkov)
-- `make tfsec` - Run tfsec security scanner
-- `make checkov` - Run checkov security scanner
-
-### Documentation
-- `make docs` - Generate documentation for all modules
-- `make docs-module MODULE=vpc` - Generate docs for a specific module
-
-### Terraform Operations
-- `make init` - Initialize Terraform in current directory
-- `make init-module MODULE=vpc` - Initialize a specific module
-- `make init-example EXAMPLE=vpc/examples/basic` - Initialize a specific example
-- `make plan` - Run terraform plan
-- `make plan-example EXAMPLE=vpc/examples/basic` - Plan a specific example
-- `make apply` - Run terraform apply (with confirmation)
-
-### Cleanup
-- `make clean` - Clean all Terraform files (.terraform, .tfstate, etc.)
-- `make clean-module MODULE=vpc` - Clean a specific module
-- `make clean-example EXAMPLE=vpc/examples/basic` - Clean a specific example
-
-### Information
-- `make list-modules` - List all modules
-- `make list-examples` - List all examples
-- `make info` - Show project information
-- `make check-versions` - Check tool versions
-
-### CI/CD
-- `make pre-commit` - Run pre-commit checks (fmt-check, validate-modules, lint)
-- `make ci` - Run full CI checks (fmt-check, validate, lint, security)
-
-### Tool Installation
-- `make install-tools` - Install all recommended tools
-- `make install-terraform-docs` - Install terraform-docs
-- `make install-tflint` - Install tflint
-- `make install-tfsec` - Install tfsec
-- `make install-checkov` - Install checkov
-
-For more details, run `make help`.
-
-## Documentation
-
-Each module includes:
-- Comprehensive README.md
-- Example configurations in `examples/` directory
-- Variable and output documentation
+1. Modules never configure `provider "aws"`.
+2. Every module ships `examples/basic` and `examples/complete`.
+3. Secure-by-default; no world-open SG defaults unless explicitly public.
+4. Commit `make docs` output (inject markers).
 
 ## License
 
-This project is licensed under the Apache License 2.0. See [LICENSE](./LICENSE) for details.
+Apache License 2.0 — see [LICENSE](./LICENSE).

@@ -9,12 +9,22 @@ locals {
       Environment = var.environment
       Project     = var.project
       ManagedBy   = "terraform"
+      Module      = "github.com/hanyouqing/terraform-aws-modules/ec2"
       Code        = var.code
       Owner       = var.owner
     },
     var.cost_center != null ? { CostCenter = var.cost_center } : {},
     var.tags
   )
+
+  # Prefer explicit networking inputs; fall back to VPC remote state.
+  vpc_remote = try(data.terraform_remote_state.vpc[0].outputs, null)
+
+  resolved_vpc_id = var.vpc_id != null ? var.vpc_id : try(local.vpc_remote.vpc_id, null)
+
+  resolved_public_subnet_ids   = length(var.public_subnet_ids) > 0 ? var.public_subnet_ids : try(local.vpc_remote.public_subnet_ids, [])
+  resolved_private_subnet_ids  = length(var.private_subnet_ids) > 0 ? var.private_subnet_ids : try(local.vpc_remote.private_subnet_ids, [])
+  resolved_database_subnet_ids = length(var.database_subnet_ids) > 0 ? var.database_subnet_ids : try(local.vpc_remote.database_subnet_ids, [])
 
   local_ssh_key_expanded_path = var.key_path != null ? pathexpand(var.key_path) : null
   local_ssh_key_file_exists   = var.key_path != null && local.local_ssh_key_expanded_path != null ? try(fileexists(local.local_ssh_key_expanded_path), false) : false
@@ -25,15 +35,15 @@ locals {
 
   default_key_name = local.local_ssh_key_exists ? local.key_pair_name : var.key_name
 
-  base_domain = try(data.terraform_remote_state.vpc.outputs.base_domain, null) != null ? data.terraform_remote_state.vpc.outputs.base_domain : var.domain
+  base_domain = try(local.vpc_remote.base_domain, null) != null ? try(local.vpc_remote.base_domain, null) : var.domain
 
-  hosted_zone_id = try(data.terraform_remote_state.vpc.outputs.hosted_zone_id, null)
+  hosted_zone_id = try(local.vpc_remote.hosted_zone_id, null)
 
   dns_enabled = local.hosted_zone_id != null && local.base_domain != null && var.dns_enabled
 
   # Get ACM certificate ARN from VPC if available, otherwise use provided certificate ARN
   alb_certificate_arn = var.alb_certificate_arn != null ? var.alb_certificate_arn : (
-    var.enable_alb && local.dns_enabled ? try(data.terraform_remote_state.vpc.outputs.acm_certificate_arn, null) : null
+    var.enable_alb && local.dns_enabled ? try(local.vpc_remote.acm_certificate_arn, null) : null
   )
 
   # Auto-enable HTTPS when ALB and DNS are enabled and certificate is available
@@ -68,10 +78,10 @@ locals {
     )
   } : {}
 
-  # Project-based DNS name for jump and gitlab (e.g., jump.production.aws.hanyouqing.com)
+  # Project-based DNS name for jump and gitlab (e.g., jump.production.example.com)
   project_dns_name = local.dns_enabled && (var.enable_jump || var.gitlab_enabled) ? "${var.project}.${var.environment}.${local.base_domain}" : null
 
-  private_hosted_zone_name = try(data.terraform_remote_state.vpc.outputs.private_hosted_zone_name, null)
+  private_hosted_zone_name = try(local.vpc_remote.private_hosted_zone_name, null)
 
   instance_private_dns_names = local.dns_enabled && local.private_hosted_zone_name != null ? {
     for k, v in local.instances_config : k => (
@@ -127,8 +137,8 @@ locals {
   # Subnet selection logic
   default_subnet_type = var.subnet_type
   default_subnet_id = var.subnet_id != null ? var.subnet_id : (
-    var.subnet_type == "private" ? data.terraform_remote_state.vpc.outputs.private_subnet_ids[0] : (
-      var.subnet_type == "database" ? data.terraform_remote_state.vpc.outputs.database_subnet_ids[0] : data.terraform_remote_state.vpc.outputs.public_subnet_ids[0]
+    var.subnet_type == "private" ? local.resolved_private_subnet_ids[0] : (
+      var.subnet_type == "database" ? local.resolved_database_subnet_ids[0] : local.resolved_public_subnet_ids[0]
     )
   )
 
@@ -276,8 +286,8 @@ locals {
   # Resolve subnet_id from subnet_type if not explicitly provided
   resolved_subnet_ids = {
     for hostname, instance in local.instances_config : hostname => instance.subnet_id != null ? instance.subnet_id : (
-      instance.subnet_type == "private" ? data.terraform_remote_state.vpc.outputs.private_subnet_ids[0] : (
-        instance.subnet_type == "database" ? data.terraform_remote_state.vpc.outputs.database_subnet_ids[0] : data.terraform_remote_state.vpc.outputs.public_subnet_ids[0]
+      instance.subnet_type == "private" ? local.resolved_private_subnet_ids[0] : (
+        instance.subnet_type == "database" ? local.resolved_database_subnet_ids[0] : local.resolved_public_subnet_ids[0]
       )
     )
   }

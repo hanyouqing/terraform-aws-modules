@@ -21,7 +21,7 @@ resource "aws_route53_record" "main_alb" {
 resource "aws_route53_record" "main_private" {
   for_each = local.dns_enabled && local.private_hosted_zone_name != null ? local.instance_private_dns_names : {}
 
-  zone_id = try(data.terraform_remote_state.vpc.outputs.private_hosted_zone_id, null)
+  zone_id = try(local.vpc_remote.private_hosted_zone_id, null)
   name    = each.value
   type    = "A"
   ttl     = var.dns_ttl
@@ -44,7 +44,7 @@ resource "aws_route53_record" "main_cname" {
   set_identifier = each.key
 }
 
-# Project-based DNS record for jump and gitlab (e.g., jump.production.aws.hanyouqing.com -> ALB)
+# Project-based DNS record for jump and gitlab (e.g., jump.production.example.com -> ALB)
 resource "aws_route53_record" "project_alb" {
   count = local.dns_enabled && local.project_dns_name != null && var.enable_alb && length(aws_lb.main) > 0 ? 1 : 0
 

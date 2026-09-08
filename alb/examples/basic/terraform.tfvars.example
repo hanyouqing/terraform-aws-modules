@@ -1,0 +1,7 @@
+project     = "ihomelabs"
+environment = "development"
+region      = "us-east-1"
+vpc_id      = "vpc-aaaaaaaa"
+subnet_ids  = ["subnet-aaaaaaaa", "subnet-bbbbbbbb"]
+security_group_ids = ["sg-cccccccc"]
+certificate_arn = "arn:aws:acm:us-east-1:123456789012:certificate/xxxxxxxx"

@@ -2,14 +2,14 @@
 # Shared Variables (Tags, Name, etc.)
 # ==============================================================================
 environment = "production"
-project     = "web3"
+project     = "ihomelabs"
 region      = "ap-southeast-1"
 
-code  = "web3:terraform/vpc"
+code  = "terraform-aws-modules:vpc"
 owner = "DevOps"
 
 tags = {
-  CostCenter = "web3"
+  CostCenter = "platform"
 }
 
 # ==============================================================================

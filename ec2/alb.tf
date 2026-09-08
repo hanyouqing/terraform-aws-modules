@@ -4,8 +4,8 @@
 
 locals {
   alb_subnet_type_resolved = var.alb_subnet_type != null ? var.alb_subnet_type : (var.alb_internal ? "private" : "public")
-  alb_subnet_ids = local.alb_subnet_type_resolved == "private" ? data.terraform_remote_state.vpc.outputs.private_subnet_ids : (
-    local.alb_subnet_type_resolved == "database" ? data.terraform_remote_state.vpc.outputs.database_subnet_ids : data.terraform_remote_state.vpc.outputs.public_subnet_ids
+  alb_subnet_ids = local.alb_subnet_type_resolved == "private" ? local.resolved_private_subnet_ids : (
+    local.alb_subnet_type_resolved == "database" ? local.resolved_database_subnet_ids : local.resolved_public_subnet_ids
   )
   alb_name = "${local.name}-alb"
 }
@@ -15,22 +15,22 @@ resource "aws_security_group" "alb" {
 
   name        = "${local.name}-alb-sg"
   description = "Security group for ${local.name} ALB"
-  vpc_id      = data.terraform_remote_state.vpc.outputs.vpc_id
+  vpc_id      = local.resolved_vpc_id
 
   ingress {
-    description = "HTTP from anywhere"
+    description = "HTTP"
     from_port   = var.alb_port
     to_port     = var.alb_port
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = var.alb_ingress_cidr_blocks
   }
 
   ingress {
-    description = "HTTPS from anywhere"
+    description = "HTTPS"
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = var.alb_ingress_cidr_blocks
   }
 
   egress {
@@ -77,7 +77,7 @@ resource "aws_lb_target_group" "main" {
   name     = "${local.name}-tg"
   port     = var.alb_target_port
   protocol = var.alb_target_protocol
-  vpc_id   = data.terraform_remote_state.vpc.outputs.vpc_id
+  vpc_id   = local.resolved_vpc_id
 
   health_check {
     enabled             = true

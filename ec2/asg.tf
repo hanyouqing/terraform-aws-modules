@@ -175,8 +175,8 @@ resource "aws_autoscaling_group" "main" {
   name = "${local.name}-asg"
   # When ASG is enabled, instances are not created, so we need to get subnets from VPC remote state
   # Use subnet_type to determine which subnets to use
-  vpc_zone_identifier = var.subnet_type == "private" ? try(data.terraform_remote_state.vpc.outputs.private_subnet_ids, []) : (
-    var.subnet_type == "database" ? try(data.terraform_remote_state.vpc.outputs.database_subnet_ids, []) : try(data.terraform_remote_state.vpc.outputs.public_subnet_ids, [])
+  vpc_zone_identifier = var.subnet_type == "private" ? try(local.resolved_private_subnet_ids, []) : (
+    var.subnet_type == "database" ? try(local.resolved_database_subnet_ids, []) : try(local.resolved_public_subnet_ids, [])
   )
   target_group_arns         = var.enable_alb && length(aws_lb_target_group.main) > 0 ? [aws_lb_target_group.main[0].arn] : []
   health_check_type         = var.asg_health_check_type

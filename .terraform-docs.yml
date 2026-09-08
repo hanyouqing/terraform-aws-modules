@@ -1,0 +1,80 @@
+# =============================================================================
+# Terraform Docs Configuration
+# =============================================================================
+#
+# Usage (from repo root, per module):
+#   terraform-docs --config .terraform-docs.yml .
+#   make docs
+#
+# Documentation: https://terraform-docs.io/
+# =============================================================================
+
+formatter: "markdown"
+version: ">= 0.16.0"
+
+header-from: "versions.tf"
+footer-from: ""
+
+show:
+  data-sources: true
+  header: false
+  inputs: true
+  modules: true
+  outputs: true
+  providers: true
+  requirements: true
+  resources: true
+
+hide:
+  empty: false
+  header: true
+  inputs: false
+  outputs: false
+  providers: false
+  requirements: false
+  resources: false
+  sensitivity: false
+
+sort:
+  enabled: true
+  by: "name"
+
+output-file: "README.md"
+output-mode: "inject"
+
+section:
+  header: "##"
+  footer: ""
+  inputs: "## Inputs"
+  modules: "## Modules"
+  outputs: "## Outputs"
+  providers: "## Providers"
+  requirements: "## Requirements"
+  resources: "## Resources"
+
+input:
+  enabled: true
+  description: true
+  default: true
+  required: true
+  type: true
+
+output:
+  enabled: true
+  description: true
+  sensitive: true
+  type: true
+
+provider:
+  enabled: true
+  version: true
+  alias: true
+
+resource:
+  enabled: true
+
+module:
+  enabled: true
+
+escape: true
+indent: 2

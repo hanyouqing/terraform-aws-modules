@@ -29,8 +29,8 @@ resource "aws_acm_certificate" "environment" {
 # DNS validation records for ACM certificate
 # These records must be created in the public hosted zone for ACM to validate the certificate
 # IMPORTANT: Ensure the public hosted zone's NS records are configured in the parent domain
-# (e.g., if domain is "development.aws.hanyouqing.com", add NS records for "development" 
-# in the "aws.hanyouqing.com" hosted zone)
+# (e.g., if domain is "development.example.com", add NS records for "development" 
+# in the "example.com" hosted zone)
 resource "aws_route53_record" "certificate_validation" {
   for_each = var.domain != null ? {
     for dvo in aws_acm_certificate.environment[0].domain_validation_options : dvo.domain_name => {
@@ -62,7 +62,7 @@ resource "aws_route53_record" "certificate_validation" {
 #
 # If validation fails, check:
 # - Are NS records configured in parent domain? (use: terraform output hosted_zone_name_servers)
-# - Can you resolve the validation record? (dig TXT _acme-challenge.development.aws.hanyouqing.com)
+# - Can you resolve the validation record? (dig TXT _acme-challenge.development.example.com)
 # - Is the public hosted zone accessible from the internet?
 resource "aws_acm_certificate_validation" "environment" {
   count = var.domain != null ? 1 : 0

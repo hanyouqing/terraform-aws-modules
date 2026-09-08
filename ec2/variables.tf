@@ -21,14 +21,44 @@ variable "region" {
 }
 
 variable "vpc_remote_state_key" {
-  description = "Remote state key for VPC module. Must match the key in your VPC module's backend.tf configuration. Example: 'hanyouqing/terraform-aws-modules:vpc/examples/basic/terraform.tfstate'"
+  description = "Remote state key for VPC module. Must match the key in your VPC module's backend.tf configuration. Example: 'ACCOUNT/terraform-aws-modules:vpc/examples/basic/terraform.tfstate'"
   type        = string
   default     = "vpc/terraform.tfstate"
 }
 
 variable "vpc_remote_state_bucket" {
-  description = "S3 bucket name for VPC remote state"
+  description = "S3 bucket for VPC remote state. Optional when vpc_id and subnet IDs are passed directly."
   type        = string
+  default     = null
+}
+
+variable "vpc_id" {
+  description = "VPC ID. Required when vpc_remote_state_bucket is null."
+  type        = string
+  default     = null
+
+  validation {
+    condition     = var.vpc_remote_state_bucket != null || var.vpc_id != null
+    error_message = "Provide either vpc_remote_state_bucket or vpc_id."
+  }
+}
+
+variable "public_subnet_ids" {
+  description = "Public subnet IDs when not using VPC remote state"
+  type        = list(string)
+  default     = []
+}
+
+variable "private_subnet_ids" {
+  description = "Private subnet IDs when not using VPC remote state"
+  type        = list(string)
+  default     = []
+}
+
+variable "database_subnet_ids" {
+  description = "Database subnet IDs when not using VPC remote state"
+  type        = list(string)
+  default     = []
 }
 
 variable "vpc_remote_state_workspace_key_prefix" {
@@ -921,6 +951,32 @@ variable "elb_idle_timeout" {
   validation {
     condition     = var.elb_idle_timeout >= 1 && var.elb_idle_timeout <= 4000
     error_message = "ELB idle timeout must be between 1 and 4000 seconds"
+  }
+}
+
+variable "elb_ingress_cidr_blocks" {
+  description = "CIDR blocks allowed to reach the Classic ELB. Prefer allowlists over 0.0.0.0/0 in production."
+  type        = list(string)
+  default     = ["0.0.0.0/0"]
+
+  validation {
+    condition = alltrue([
+      for cidr in var.elb_ingress_cidr_blocks : can(cidrhost(cidr, 0))
+    ])
+    error_message = "All elb_ingress_cidr_blocks must be valid CIDR blocks."
+  }
+}
+
+variable "alb_ingress_cidr_blocks" {
+  description = "CIDR blocks allowed to reach the ALB security group created by this module. Prefer allowlists over 0.0.0.0/0 in production."
+  type        = list(string)
+  default     = ["0.0.0.0/0"]
+
+  validation {
+    condition = alltrue([
+      for cidr in var.alb_ingress_cidr_blocks : can(cidrhost(cidr, 0))
+    ])
+    error_message = "All alb_ingress_cidr_blocks must be valid CIDR blocks."
   }
 }
 

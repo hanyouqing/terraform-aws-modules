@@ -20,6 +20,7 @@ locals {
       Project     = var.project
       Environment = var.environment
       ManagedBy   = "terraform"
+      Module      = "github.com/hanyouqing/terraform-aws-modules/organizations"
     },
     var.tags
   )

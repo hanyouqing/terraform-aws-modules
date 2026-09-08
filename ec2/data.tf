@@ -1,4 +1,6 @@
 data "terraform_remote_state" "vpc" {
+  count = var.vpc_remote_state_bucket != null ? 1 : 0
+
   backend   = "s3"
   workspace = terraform.workspace
 
@@ -45,11 +47,8 @@ data "aws_ssm_parameter" "debian_11_ami" {
 }
 
 # Custom AMI lookup - only used when SSM Parameter Store lookup is not applicable
-# This is a fallback for custom AMI name filters when SSM Parameter Store doesn't support the OS type/version
 data "aws_ami" "custom" {
   count = var.ami_id == null && var.ami_name_filter != null && (
-    # Only use custom AMI lookup if not using SSM Parameter Store
-    # SSM Parameter Store is used for: ubuntu 24.04, amazon-linux 2023, rhel 8/9, debian 11/12
     !(var.os_type == "ubuntu" && (var.ubuntu_version == "24.04" || var.os_version == "24.04")) &&
     !(var.os_type == "amazon-linux" && var.os_version == "2023") &&
     !(var.os_type == "rhel" && (var.os_version == "8" || var.os_version == "9")) &&
@@ -71,4 +70,3 @@ data "aws_ami" "custom" {
 }
 
 data "aws_caller_identity" "current" {}
-

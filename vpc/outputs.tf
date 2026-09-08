@@ -897,7 +897,7 @@ data "terraform_remote_state" "vpc" {
 
   config = {
     bucket               = "terraform-aws-modules-example-state"  # Replace with your actual bucket name
-    key                  = "hanyouqing/terraform-aws-modules:vpc/examples/basic/terraform.tfstate"  # Replace with your actual state key
+    key                  = "ACCOUNT/terraform-aws-modules:vpc/examples/basic/terraform.tfstate"  # Replace with your actual state key
     region               = "us-east-1"  # Replace with your actual region
     workspace_key_prefix = "env:"
   }
@@ -912,7 +912,7 @@ data "terraform_remote_state" "vpc" {
 # variable "vpc_remote_state_key" {
 #   description = "Remote state key for VPC module"
 #   type        = string
-#   default     = "hanyouqing/terraform-aws-modules:vpc/examples/basic/terraform.tfstate"
+#   default     = "ACCOUNT/terraform-aws-modules:vpc/examples/basic/terraform.tfstate"
 # }
 
 2. EC2 Instance Example

@@ -1,7 +1,8 @@
 # Local .terraform directories
 .terraform/
+**/.terragrunt-cache/
 
-# Terraform lock files
+# Terraform lock files (generated locally; CI uses fresh init)
 .terraform.lock.hcl
 
 # .tfstate files
@@ -12,35 +13,38 @@
 crash.log
 crash.*.log
 
-# Exclude all .tfvars files, which are likely to contain sensitive data, such as
-# password, private keys, and other secrets. These should not be part of version 
-# control as they are data points which are potentially sensitive and subject 
-# to change depending on the environment.
+# Exclude all .tfvars files (may contain secrets). Keep *.tfvars.example.
 *.tfvars
 *.tfvars.json
 
-# Ignore override files as they are usually used to override resources locally and so
-# are not checked in
+# Override files
 override.tf
 override.tf.json
 *_override.tf
 *_override.tf.json
 
-# Ignore transient lock info files created by terraform apply
 .terraform.tfstate.lock.info
 
-# Include override files you do wish to add to version control using negated pattern
-# !example_override.tf
+# Plan dumps (may contain sensitive values)
+**/terraform-plan-output.md
+*tfplan*
+*.tfplan
 
-# Include tfplan files to ignore the plan output of command: terraform plan -out=tfplan
-# example: *tfplan*
 
-# Ignore CLI configuration files (keep .terraformrc.example in repo)
-# Note: .terraformrc is ignored, but .terraformrc.example should be committed
-.terraformrc
+# Private keys
+*.pem
+
+# CLI configuration (keep .terraformrc.example; committed .terraformrc is the shared template)
+.terraformrc.local
 terraform.rc
 
-
-# Environment variables (keep .env.sh.example in repo)
+# Environment variables
 .env.sh
 .env.sh.local
+*.env
+!.env.sh.example
+
+# OS / editor
+.DS_Store
+*.swp
+*~

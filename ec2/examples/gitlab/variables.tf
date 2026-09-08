@@ -29,7 +29,7 @@ variable "vpc_remote_state_bucket" {
 variable "vpc_remote_state_key" {
   description = "Remote state key for VPC module. Must match the key in your VPC module's backend.tf."
   type        = string
-  default     = "hanyouqing/terraform-aws-modules:vpc/examples/complete/terraform.tfstate"
+  default     = "ACCOUNT/terraform-aws-modules:vpc/examples/complete/terraform.tfstate"
 }
 
 variable "instance_count" {
@@ -171,7 +171,7 @@ variable "dns_ttl" {
 }
 
 variable "jump_server_host" {
-  description = "Jump server hostname or IP address for SSH proxy (e.g., jump.production.aws.hanyouqing.com or 1.2.3.4)"
+  description = "Jump server hostname or IP address for SSH proxy (e.g., jump.production.example.com or 1.2.3.4)"
   type        = string
   default     = null
 }

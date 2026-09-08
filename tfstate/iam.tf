@@ -1,4 +1,6 @@
 resource "aws_iam_user" "terraform" {
+  count = var.create_iam_user ? 1 : 0
+
   name = "${var.project}-terraform-user-${var.environment}"
   path = "/"
 
@@ -12,8 +14,10 @@ resource "aws_iam_user" "terraform" {
 }
 
 resource "aws_iam_user_policy" "terraform_state" {
+  count = var.create_iam_user ? 1 : 0
+
   name = "${var.project}-terraform-state-policy-${var.environment}"
-  user = aws_iam_user.terraform.name
+  user = aws_iam_user.terraform[0].name
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -54,6 +58,7 @@ resource "aws_iam_user_policy" "terraform_state" {
 }
 
 resource "aws_iam_access_key" "terraform" {
-  user = aws_iam_user.terraform.name
-}
+  count = var.create_iam_user && var.create_iam_access_key ? 1 : 0
 
+  user = aws_iam_user.terraform[0].name
+}

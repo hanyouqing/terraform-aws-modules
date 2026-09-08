@@ -1,0 +1,14 @@
+project     = "ihomelabs"
+environment = "production"
+region      = "us-east-1"
+
+sse_algorithm         = "AES256"
+create_iam_user       = false
+create_iam_access_key = false
+
+owner = "platform"
+code  = "terraform-aws-modules:tfstate"
+
+tags = {
+  CostCenter = "platform"
+}

@@ -29,7 +29,7 @@ variable "vpc_remote_state_bucket" {
 variable "vpc_remote_state_key" {
   description = "Remote state key for VPC module. Must match the key in your VPC module's backend.tf. Default matches complete example."
   type        = string
-  default     = "hanyouqing/terraform-aws-modules:vpc/examples/complete/terraform.tfstate"
+  default     = "ACCOUNT/terraform-aws-modules:vpc/examples/complete/terraform.tfstate"
 }
 
 variable "instance_count" {

@@ -1,0 +1,5 @@
+project     = "ihomelabs"
+environment = "development"
+region      = "us-east-1"
+subnet_ids  = ["subnet-aaaaaaaa", "subnet-bbbbbbbb"]
+vpc_security_group_ids = ["sg-cccccccc"]

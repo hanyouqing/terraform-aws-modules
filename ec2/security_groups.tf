@@ -2,7 +2,7 @@
 resource "aws_security_group" "main" {
   name        = "${local.name}-sg"
   description = "Security group for ${local.name} instances"
-  vpc_id      = data.terraform_remote_state.vpc.outputs.vpc_id
+  vpc_id      = local.resolved_vpc_id
 
   tags = merge(
     local.common_tags,

@@ -3,6 +3,7 @@ resource "aws_organizations_account" "accounts" {
 
   name                       = each.value.name
   email                      = each.value.email
+  parent_id                  = each.value.parent_id != null ? each.value.parent_id : local.root_id
   iam_user_access_to_billing = each.value.iam_user_access_to_billing
   role_name                  = each.value.role_name
   close_on_deletion          = each.value.close_on_deletion

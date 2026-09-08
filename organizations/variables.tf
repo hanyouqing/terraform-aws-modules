@@ -1,65 +1,22 @@
-variable "region" {
-  description = "AWS region"
-  type        = string
-  default     = "us-east-1"
-}
-
-variable "aws_access_key" {
-  description = "AWS access key ID. Can be set via AWS_ACCESS_KEY_ID environment variable."
-  type        = string
-  default     = null
-  sensitive   = true
-}
-
-variable "aws_secret_key" {
-  description = "AWS secret access key. Can be set via AWS_SECRET_ACCESS_KEY environment variable."
-  type        = string
-  default     = null
-  sensitive   = true
-}
-
-variable "aws_profile" {
-  description = "AWS profile name from ~/.aws/credentials. Can be set via AWS_PROFILE environment variable."
-  type        = string
-  default     = null
-}
-
-variable "aws_session_token" {
-  description = "AWS session token for temporary credentials. Can be set via AWS_SESSION_TOKEN environment variable."
-  type        = string
-  default     = null
-  sensitive   = true
-}
-
-variable "aws_assume_role_arn" {
-  description = "ARN of the IAM role to assume"
-  type        = string
-  default     = null
-}
-
-variable "aws_assume_role_session_name" {
-  description = "Session name for assume role"
-  type        = string
-  default     = "terraform-organizations-module"
-}
-
-variable "aws_assume_role_external_id" {
-  description = "External ID for assume role"
-  type        = string
-  default     = null
-}
-
 variable "accounts" {
   description = "List of AWS accounts to create"
   type = list(object({
     name                       = string
     email                      = string
+    parent_id                  = optional(string, null)
     iam_user_access_to_billing = optional(string, "ALLOW")
     role_name                  = optional(string, "OrganizationAccountAccessRole")
     close_on_deletion          = optional(bool, false)
     tags                       = optional(map(string), {})
   }))
   default = []
+
+  validation {
+    condition = alltrue([
+      for a in var.accounts : contains(["ALLOW", "DENY"], a.iam_user_access_to_billing)
+    ])
+    error_message = "accounts.*.iam_user_access_to_billing must be ALLOW or DENY."
+  }
 }
 
 variable "organizational_units" {
@@ -85,20 +42,22 @@ variable "service_control_policies" {
 }
 
 variable "project" {
-  description = "Project name"
+  description = "Project name used in default tags"
   type        = string
-  default     = "web3"
 }
 
 variable "environment" {
-  description = "Environment name"
+  description = "Environment name (development, testing, staging, production)"
   type        = string
-  default     = "production"
+
+  validation {
+    condition     = contains(["development", "testing", "staging", "production"], var.environment)
+    error_message = "Environment must be one of: development, testing, staging, production."
+  }
 }
 
 variable "tags" {
-  description = "Additional tags"
+  description = "Additional tags merged into all organization resources"
   type        = map(string)
   default     = {}
 }
-

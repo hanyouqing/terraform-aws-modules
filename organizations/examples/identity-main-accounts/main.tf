@@ -1,18 +1,20 @@
 terraform {
-  required_version = "~> 1.14"
+  required_version = ">= 1.14.2"
 
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 6.26"
+      version = "~> 6.28"
     }
   }
 }
 
+provider "aws" {
+  region = var.region
+}
+
 module "organizations" {
   source = "../../"
-
-  region = var.region
 
   project     = var.project
   environment = var.environment
@@ -49,4 +51,3 @@ output "main_account_arn" {
   value       = module.organizations.accounts["main"].arn
   description = "Main account ARN"
 }
-

@@ -76,7 +76,7 @@ variable "enable_vpc_endpoints" {
 }
 
 variable "domain" {
-  description = "Base domain name for Route 53 hosted zone (e.g., aws.hanyouqing.com)"
+  description = "Base domain name for Route 53 hosted zone (e.g., example.com)"
   type        = string
   default     = null
 }
