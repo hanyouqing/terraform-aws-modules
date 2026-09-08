@@ -955,9 +955,9 @@ variable "elb_idle_timeout" {
 }
 
 variable "elb_ingress_cidr_blocks" {
-  description = "CIDR blocks allowed to reach the Classic ELB. Prefer allowlists over 0.0.0.0/0 in production."
+  description = "CIDR blocks allowed to reach the Classic ELB. Empty by default — must be set when enable_elb is true. Production forbids 0.0.0.0/0 unless allow_public_lb_ingress = true."
   type        = list(string)
-  default     = ["0.0.0.0/0"]
+  default     = []
 
   validation {
     condition = alltrue([
@@ -968,9 +968,9 @@ variable "elb_ingress_cidr_blocks" {
 }
 
 variable "alb_ingress_cidr_blocks" {
-  description = "CIDR blocks allowed to reach the ALB security group created by this module. Prefer allowlists over 0.0.0.0/0 in production."
+  description = "CIDR blocks allowed to reach the ALB security group. Empty by default — must be set when enable_alb is true. Production forbids 0.0.0.0/0 unless allow_public_lb_ingress = true."
   type        = list(string)
-  default     = ["0.0.0.0/0"]
+  default     = []
 
   validation {
     condition = alltrue([
@@ -978,6 +978,12 @@ variable "alb_ingress_cidr_blocks" {
     ])
     error_message = "All alb_ingress_cidr_blocks must be valid CIDR blocks."
   }
+}
+
+variable "allow_public_lb_ingress" {
+  description = "Explicitly allow 0.0.0.0/0 (or ::/0) on ALB/ELB. Required in production when using public CIDRs."
+  type        = bool
+  default     = false
 }
 
 variable "iam_instance_profile_enabled" {
@@ -1041,9 +1047,81 @@ variable "enable_elasticache" {
 }
 
 variable "enable_ecs" {
-  description = "Enable ECS access permissions. When enabled, allows EC2 instance to describe ECS clusters, services, tasks, and execute commands in containers."
+  description = "Enable ECS access permissions (describe/list by default; mutations optional)."
   type        = bool
   default     = false
+}
+
+variable "iam_enable_ec2_describe" {
+  description = "Attach read-only EC2 Describe* policy (Resource=* required by AWS for these APIs)."
+  type        = bool
+  default     = true
+}
+
+variable "iam_secrets_arns" {
+  description = "Secrets Manager ARNs the instance may read. Empty uses project/environment + rds* patterns."
+  type        = list(string)
+  default     = []
+}
+
+variable "iam_ecr_repository_arns" {
+  description = "ECR repository ARNs. Empty defaults to repository/{project}-*."
+  type        = list(string)
+  default     = []
+}
+
+variable "iam_ecr_allow_push" {
+  description = "Allow ECR push actions in addition to pull."
+  type        = bool
+  default     = false
+}
+
+variable "iam_eks_cluster_arns" {
+  description = "EKS cluster ARNs. Empty defaults to cluster/{project}-*."
+  type        = list(string)
+  default     = []
+}
+
+variable "iam_ecs_cluster_arns" {
+  description = "ECS cluster ARNs. Empty defaults to cluster/{project}-*."
+  type        = list(string)
+  default     = []
+}
+
+variable "iam_ecs_service_arns" {
+  description = "ECS service ARNs. Empty defaults to service/{project}-*/*."
+  type        = list(string)
+  default     = []
+}
+
+variable "iam_ecs_task_definition_arns" {
+  description = "ECS task definition ARNs. Empty defaults to task-definition/{project}-*:*."
+  type        = list(string)
+  default     = []
+}
+
+variable "iam_ecs_allow_task_run" {
+  description = "Allow ecs:RunTask / StopTask on scoped task definitions."
+  type        = bool
+  default     = false
+}
+
+variable "iam_ecs_allow_mutations" {
+  description = "Allow ECS service/task-definition create/update/delete (off by default)."
+  type        = bool
+  default     = false
+}
+
+variable "iam_kms_key_arns" {
+  description = "KMS key ARNs for Secrets Manager decrypt. Empty defaults to account keys in region."
+  type        = list(string)
+  default     = []
+}
+
+variable "iam_cloudwatch_log_group_arns" {
+  description = "CloudWatch Logs ARNs for ECS log read. Empty defaults to /{project}/*."
+  type        = list(string)
+  default     = []
 }
 
 variable "dns_enabled" {

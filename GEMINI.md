@@ -138,6 +138,16 @@ Keep these in sync across root README, Makefile, CI, `.terraform-version`, and e
 ### ec2
 
 - IMDSv2 on; EBS encryption preferred; prefer SSM over public SSH; no embedded provider.
+- IAM: Describe* may require `Resource="*"` (AWS limitation); scope Secrets/ECR/EKS/ECS/KMS/Logs by ARN. ECR push and ECS mutations off by default.
+- ALB/ELB ingress CIDRs default empty; production forbids `0.0.0.0/0` unless `allow_public_lb_ingress = true`.
+
+### eks
+
+- Private API preferred; production requires KMS secrets encryption and private endpoint.
+
+### ecs
+
+- Fargate capacity providers; Container Insights on by default.
 
 ### tfstate
 

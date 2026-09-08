@@ -271,3 +271,21 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "alb_ingress_cidr_blocks" {
+  description = "ALB ingress CIDRs (explicit; no open default)"
+  type        = list(string)
+  default     = ["10.0.0.0/8"]
+}
+
+variable "elb_ingress_cidr_blocks" {
+  description = "ELB ingress CIDRs"
+  type        = list(string)
+  default     = ["10.0.0.0/8"]
+}
+
+variable "allow_public_lb_ingress" {
+  description = "Allow 0.0.0.0/0 on LBs (must be true in production if using public CIDRs)"
+  type        = bool
+  default     = false
+}

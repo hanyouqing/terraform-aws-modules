@@ -48,6 +48,20 @@ resource "aws_security_group" "alb" {
       Type = "alb-security-group"
     }
   )
+
+  lifecycle {
+    precondition {
+      condition     = length(var.alb_ingress_cidr_blocks) > 0
+      error_message = "alb_ingress_cidr_blocks must be set when enable_alb is true (no open default)."
+    }
+
+    precondition {
+      condition = (
+        !contains(var.alb_ingress_cidr_blocks, "0.0.0.0/0") && !contains(var.alb_ingress_cidr_blocks, "::/0")
+      ) || var.allow_public_lb_ingress || var.environment != "production"
+      error_message = "Production ALB cannot use 0.0.0.0/0 or ::/0 unless allow_public_lb_ingress = true."
+    }
+  }
 }
 
 resource "aws_lb" "main" {

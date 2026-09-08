@@ -1,34 +1,21 @@
 # Pre-release review report
 
-Date: 2026-09-09 (release gate)
+Date: 2026-09-09 (follow-up)
 
-## Scope
+## Completed follow-ups
 
-All 13 modules: vpc, ec2, organizations, tfstate, s3, kms, secrets-manager, ecr, iam-role, rds, alb, sns, cloudwatch.
+| Item | Change |
+|------|--------|
+| EC2 IAM least privilege | Scoped Secrets/ECR/EKS/ECS/KMS/Logs; ECR pull-only and ECS mutations off by default; Describe* kept on `*` only where AWS requires it |
+| LB public CIDR | `alb_ingress_cidr_blocks` / `elb_ingress_cidr_blocks` default `[]` (must set); production blocks `0.0.0.0/0` unless `allow_public_lb_ingress = true` |
+| EKS / ECS modules | Added with examples, docs inject, Terragrunt `_envcommon` |
 
-## Blockers fixed before push
+## Module count
 
-| Severity | Issue | Fix |
-|----------|-------|-----|
-| P0 | Tracked `terraform.tfvars` under vpc examples | Removed from git index (gitignored) |
-| P0 | Tracked `terraform-plan-output.md` | Removed from git; gitignored |
-| P0 | `identity-account` used role resource attrs for `target_role_name` / `external_id` | Use `var.team_roles[each.key]` |
-| P1 | Personal `hanyouqing` / `web3` / `aws.hanyouqing.com` defaults in examples | Replaced with placeholders (`ACCOUNT/...`, `example.com`, `ihomelabs`) |
-| P1 | EC2 ALB/ELB SG hard-coded `0.0.0.0/0` | Configurable `alb_ingress_cidr_blocks` / `elb_ingress_cidr_blocks` |
-| P1 | Modules embedding providers / always-on access keys | Fixed in prior pass |
-| P1 | EC2 required VPC remote state | Optional direct `vpc_id` + subnets |
+15 modules: vpc, ec2, eks, ecs, organizations, tfstate, s3, kms, secrets-manager, ecr, iam-role, rds, alb, sns, cloudwatch.
 
-## Remaining accepted risks
+## Remaining optional hardening
 
-| Severity | Issue | Guidance |
-|----------|-------|----------|
-| P2 | EC2 IAM Describe* still often `Resource = "*"` | AWS API limitation for many Describe calls; continue least-privilege pass |
-| P2 | Public LB default CIDR still `0.0.0.0/0` | Override with allowlists in production |
-| P2 | No EKS/ECS/Lambda/SQS yet | Follow-up modules |
-
-## Release gate
-
-- Modules never configure `provider "aws"` (examples only)
-- Secure defaults documented in module READMEs
-- Terragrunt `_envcommon` present for all modules
-- Docs inject markers present
+- Attach IRSA OIDC provider resources in `eks` (addon/IRSA helpers)
+- ECS service/task definition submodule
+- Further EC2 IAM Condition keys for Describe* where AWS adds support

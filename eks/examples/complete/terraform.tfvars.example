@@ -1,0 +1,5 @@
+project     = "ihomelabs"
+environment = "production"
+region      = "us-east-1"
+subnet_ids  = ["subnet-aaaaaaaa", "subnet-bbbbbbbb"]
+encryption_kms_key_arn = "arn:aws:kms:us-east-1:123456789012:key/xxxxxxxx"

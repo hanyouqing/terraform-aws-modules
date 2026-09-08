@@ -16,7 +16,9 @@ Production-ready Terraform modules for AWS, aligned with [`terraform-oci-modules
 
 | Module | Description |
 |--------|-------------|
-| **[ec2](./ec2/)** | EC2 (+ optional JumpServer/GitLab/Netbird, ASG/ALB) |
+| **[ec2](./ec2/)** | EC2 (+ optional JumpServer/GitLab/Netbird, ASG/ALB); least-privilege IAM |
+| **[eks](./eks/)** | EKS cluster + managed node group (private API preferred) |
+| **[ecs](./ecs/)** | ECS cluster with Fargate capacity providers |
 | **[alb](./alb/)** | Application Load Balancer, target groups, listeners |
 | **[iam-role](./iam-role/)** | IAM roles, managed/inline policies, instance profiles |
 

@@ -89,11 +89,13 @@ module "ec2" {
   enable_eip = var.enable_eip
 
   # Application Load Balancer (enabled by default for HTTPS and security)
-  enable_alb          = var.enable_alb
-  alb_port            = var.alb_port
-  alb_protocol        = var.alb_protocol
-  alb_target_port     = var.alb_target_port
-  alb_certificate_arn = var.alb_certificate_arn
+  enable_alb              = var.enable_alb
+  alb_ingress_cidr_blocks = var.alb_ingress_cidr_blocks
+  allow_public_lb_ingress = var.allow_public_lb_ingress
+  alb_port                = var.alb_port
+  alb_protocol            = var.alb_protocol
+  alb_target_port         = var.alb_target_port
+  alb_certificate_arn     = var.alb_certificate_arn
 
   # DNS configuration
   domain      = var.domain

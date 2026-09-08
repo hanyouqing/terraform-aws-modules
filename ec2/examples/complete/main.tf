@@ -77,15 +77,18 @@ module "ec2" {
   enable_eip = var.enable_eip
 
   # Load Balancer configuration
-  enable_alb            = var.enable_alb
-  alb_port              = var.alb_port
-  alb_target_port       = var.alb_target_port
-  alb_protocol          = var.alb_protocol
-  alb_target_protocol   = var.alb_target_protocol
-  enable_elb            = var.enable_elb
-  elb_listener_port     = var.elb_listener_port
-  elb_instance_port     = var.elb_instance_port
-  elb_listener_protocol = var.elb_listener_protocol
+  enable_alb              = var.enable_alb
+  alb_ingress_cidr_blocks = var.alb_ingress_cidr_blocks
+  elb_ingress_cidr_blocks = var.elb_ingress_cidr_blocks
+  allow_public_lb_ingress = var.allow_public_lb_ingress
+  alb_port                = var.alb_port
+  alb_target_port         = var.alb_target_port
+  alb_protocol            = var.alb_protocol
+  alb_target_protocol     = var.alb_target_protocol
+  enable_elb              = var.enable_elb
+  elb_listener_port       = var.elb_listener_port
+  elb_instance_port       = var.elb_instance_port
+  elb_listener_protocol   = var.elb_listener_protocol
 
   # Spot instance configuration
   spot_instance_enabled      = var.spot_instance_enabled

@@ -1,15 +1,49 @@
 # ==============================================================================
-# IAM Role and Instance Profile for EC2 Instances
+# IAM Role and Instance Profile for EC2 Instances (least privilege)
 # ==============================================================================
-# This IAM role allows EC2 instances to:
-# - Access EC2 instances (for SSH connections) - always enabled when iam_instance_profile_enabled = true
-# - Access Systems Manager Session Manager (when enable_ssm_session_manager = true)
-# - Access ElastiCache (for Redis connections) - when enable_elasticache = true
-# - Access RDS databases (when enable_rds = true)
-# - Access ECR repositories (when enable_ecr = true)
-# - Access EKS clusters (when enable_eks = true)
-# - Access ECS clusters (when enable_ecs = true)
+# EC2/RDS/ElastiCache "Describe*" APIs generally require Resource="*" (AWS IAM
+# limitation). Mutating and data-plane actions are scoped to account/region ARNs
+# or caller-provided resource ARN lists.
 # ==============================================================================
+
+locals {
+  account_id = data.aws_caller_identity.current.account_id
+  partition  = data.aws_partition.current.partition
+
+  secrets_arns = length(var.iam_secrets_arns) > 0 ? var.iam_secrets_arns : [
+    "arn:${local.partition}:secretsmanager:${var.region}:${local.account_id}:secret:${var.project}-${var.environment}-*",
+    "arn:${local.partition}:secretsmanager:${var.region}:${local.account_id}:secret:rds*",
+  ]
+
+  ecr_repository_arns = length(var.iam_ecr_repository_arns) > 0 ? var.iam_ecr_repository_arns : [
+    "arn:${local.partition}:ecr:${var.region}:${local.account_id}:repository/${var.project}-*",
+  ]
+
+  eks_cluster_arns = length(var.iam_eks_cluster_arns) > 0 ? var.iam_eks_cluster_arns : [
+    "arn:${local.partition}:eks:${var.region}:${local.account_id}:cluster/${var.project}-*",
+  ]
+
+  ecs_cluster_arns = length(var.iam_ecs_cluster_arns) > 0 ? var.iam_ecs_cluster_arns : [
+    "arn:${local.partition}:ecs:${var.region}:${local.account_id}:cluster/${var.project}-*",
+  ]
+
+  ecs_service_arns = length(var.iam_ecs_service_arns) > 0 ? var.iam_ecs_service_arns : [
+    "arn:${local.partition}:ecs:${var.region}:${local.account_id}:service/${var.project}-*/*",
+  ]
+
+  ecs_task_definition_arns = length(var.iam_ecs_task_definition_arns) > 0 ? var.iam_ecs_task_definition_arns : [
+    "arn:${local.partition}:ecs:${var.region}:${local.account_id}:task-definition/${var.project}-*:*",
+  ]
+
+  kms_key_arns = length(var.iam_kms_key_arns) > 0 ? var.iam_kms_key_arns : [
+    "arn:${local.partition}:kms:${var.region}:${local.account_id}:key/*",
+  ]
+
+  log_group_arns = length(var.iam_cloudwatch_log_group_arns) > 0 ? var.iam_cloudwatch_log_group_arns : [
+    "arn:${local.partition}:logs:${var.region}:${local.account_id}:log-group:/${var.project}/*",
+    "arn:${local.partition}:logs:${var.region}:${local.account_id}:log-group:/${var.project}/*:log-stream:*",
+  ]
+}
 
 resource "aws_iam_role" "main" {
   count = var.iam_instance_profile_enabled && var.iam_instance_profile_name == null ? 1 : 0
@@ -37,17 +71,18 @@ resource "aws_iam_role" "main" {
   )
 }
 
-# Policy for EC2 access (for SSH connections)
+# Read-only EC2 describe (Resource="*" required by AWS for these actions)
 resource "aws_iam_role_policy" "main_ec2_access" {
-  count = var.iam_instance_profile_enabled && var.iam_instance_profile_name == null ? 1 : 0
+  count = var.iam_instance_profile_enabled && var.iam_instance_profile_name == null && var.iam_enable_ec2_describe ? 1 : 0
 
-  name = "${local.name}-ec2-access-policy"
+  name = "${local.name}-ec2-describe-policy"
   role = aws_iam_role.main[0].id
 
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
+        Sid    = "EC2DescribeReadOnly"
         Effect = "Allow"
         Action = [
           "ec2:DescribeInstances",
@@ -63,7 +98,6 @@ resource "aws_iam_role_policy" "main_ec2_access" {
   })
 }
 
-# Policy for RDS access (for database connections and Secrets Manager access)
 resource "aws_iam_role_policy" "main_rds_access" {
   count = var.iam_instance_profile_enabled && var.iam_instance_profile_name == null && var.enable_rds ? 1 : 0
 
@@ -72,45 +106,44 @@ resource "aws_iam_role_policy" "main_rds_access" {
 
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "rds:DescribeDBInstances",
-          "rds:DescribeDBClusters",
-          "rds:DescribeDBClusterEndpoints",
-          "rds:DescribeDBClusterParameterGroups",
-          "rds:DescribeDBParameters",
-          "rds:ListTagsForResource"
-        ]
-        Resource = "*"
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "secretsmanager:GetSecretValue",
-          "secretsmanager:DescribeSecret",
-          "secretsmanager:ListSecrets"
-        ]
-        Resource = "arn:aws:secretsmanager:${var.region}:${data.aws_caller_identity.current.account_id}:secret:*rds*master*password*"
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "kms:Decrypt"
-        ]
-        Resource = "*"
-        Condition = {
-          StringEquals = {
-            "kms:ViaService" = "secretsmanager.${var.region}.amazonaws.com"
+    Statement = concat(
+      [
+        {
+          Sid    = "RDSDescribe"
+          Effect = "Allow"
+          Action = [
+            "rds:DescribeDBInstances",
+            "rds:DescribeDBClusters",
+            "rds:DescribeDBClusterEndpoints",
+            "rds:ListTagsForResource"
+          ]
+          # Describe* on RDS is typically Resource="*"; keep narrow list of actions only.
+          Resource = "*"
+        },
+        {
+          Sid      = "SecretsRead"
+          Effect   = "Allow"
+          Action   = ["secretsmanager:GetSecretValue", "secretsmanager:DescribeSecret"]
+          Resource = local.secrets_arns
+        }
+      ],
+      length(local.kms_key_arns) > 0 ? [
+        {
+          Sid      = "KmsDecryptViaSecretsManager"
+          Effect   = "Allow"
+          Action   = ["kms:Decrypt"]
+          Resource = local.kms_key_arns
+          Condition = {
+            StringEquals = {
+              "kms:ViaService" = "secretsmanager.${var.region}.amazonaws.com"
+            }
           }
         }
-      }
-    ]
+      ] : []
+    )
   })
 }
 
-# Policy for ElastiCache access (for Redis connections)
 resource "aws_iam_role_policy" "main_elasticache_access" {
   count = var.iam_instance_profile_enabled && var.iam_instance_profile_name == null && var.enable_elasticache ? 1 : 0
 
@@ -121,15 +154,12 @@ resource "aws_iam_role_policy" "main_elasticache_access" {
     Version = "2012-10-17"
     Statement = [
       {
+        Sid    = "ElastiCacheDescribe"
         Effect = "Allow"
         Action = [
           "elasticache:DescribeCacheClusters",
           "elasticache:DescribeReplicationGroups",
-          "elasticache:DescribeCacheNodes",
-          "elasticache:DescribeCacheParameterGroups",
-          "elasticache:DescribeCacheParameters",
           "elasticache:DescribeCacheSubnetGroups",
-          "elasticache:DescribeEvents",
           "elasticache:ListTagsForResource"
         ]
         Resource = "*"
@@ -138,7 +168,6 @@ resource "aws_iam_role_policy" "main_elasticache_access" {
   })
 }
 
-# Policy for ECR access (for Docker image pull/push operations)
 resource "aws_iam_role_policy" "main_ecr_access" {
   count = var.iam_instance_profile_enabled && var.iam_instance_profile_name == null && var.enable_ecr ? 1 : 0
 
@@ -147,47 +176,45 @@ resource "aws_iam_role_policy" "main_ecr_access" {
 
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "ecr:GetAuthorizationToken"
-        ]
-        Resource = "*"
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "ecr:BatchCheckLayerAvailability",
-          "ecr:GetDownloadUrlForLayer",
-          "ecr:BatchGetImage",
-          "ecr:PutImage",
-          "ecr:InitiateLayerUpload",
-          "ecr:UploadLayerPart",
-          "ecr:CompleteLayerUpload",
-          "ecr:DescribeRepositories",
-          "ecr:ListImages",
-          "ecr:DescribeImages",
-          "ecr:ListTagsForResource",
-          "ecr:TagResource",
-          "ecr:UntagResource"
-        ]
-        Resource = "arn:aws:ecr:${var.region}:${data.aws_caller_identity.current.account_id}:repository/*"
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "ecr:GetRepositoryPolicy",
-          "ecr:CreateRepository",
-          "ecr:DeleteRepository"
-        ]
-        Resource = "arn:aws:ecr:${var.region}:${data.aws_caller_identity.current.account_id}:repository/*"
-      }
-    ]
+    Statement = concat(
+      [
+        {
+          Sid      = "ECRAuthToken"
+          Effect   = "Allow"
+          Action   = ["ecr:GetAuthorizationToken"]
+          Resource = "*"
+        },
+        {
+          Sid    = "ECRPull"
+          Effect = "Allow"
+          Action = [
+            "ecr:BatchCheckLayerAvailability",
+            "ecr:GetDownloadUrlForLayer",
+            "ecr:BatchGetImage",
+            "ecr:DescribeRepositories",
+            "ecr:ListImages",
+            "ecr:DescribeImages"
+          ]
+          Resource = local.ecr_repository_arns
+        }
+      ],
+      var.iam_ecr_allow_push ? [
+        {
+          Sid    = "ECRPush"
+          Effect = "Allow"
+          Action = [
+            "ecr:PutImage",
+            "ecr:InitiateLayerUpload",
+            "ecr:UploadLayerPart",
+            "ecr:CompleteLayerUpload"
+          ]
+          Resource = local.ecr_repository_arns
+        }
+      ] : []
+    )
   })
 }
 
-# Policy for EKS access (for kubectl configuration and cluster access)
 resource "aws_iam_role_policy" "main_eks_access" {
   count = var.iam_instance_profile_enabled && var.iam_instance_profile_name == null && var.enable_eks ? 1 : 0
 
@@ -198,35 +225,27 @@ resource "aws_iam_role_policy" "main_eks_access" {
     Version = "2012-10-17"
     Statement = [
       {
-        Effect = "Allow"
-        Action = [
-          "eks:DescribeCluster",
-          "eks:ListClusters",
-          "eks:AccessKubernetesApi",
-          "eks:DescribeNodegroup",
-          "eks:ListNodegroups",
-          "eks:DescribeAddon",
-          "eks:ListAddons",
-          "eks:DescribeFargateProfile",
-          "eks:ListFargateProfiles"
-        ]
+        Sid      = "EKSListClusters"
+        Effect   = "Allow"
+        Action   = ["eks:ListClusters"]
         Resource = "*"
       },
       {
+        Sid    = "EKSDescribeCluster"
         Effect = "Allow"
         Action = [
-          "eks:DescribeAccessEntry",
-          "eks:ListAccessEntries",
-          "eks:DescribeAccessPolicy",
-          "eks:ListAccessPolicies"
+          "eks:DescribeCluster",
+          "eks:ListNodegroups",
+          "eks:DescribeNodegroup",
+          "eks:ListAddons",
+          "eks:DescribeAddon"
         ]
-        Resource = "*"
+        Resource = local.eks_cluster_arns
       }
     ]
   })
 }
 
-# Policy for ECS access (for cluster, service, and task management)
 resource "aws_iam_role_policy" "main_ecs_access" {
   count = var.iam_instance_profile_enabled && var.iam_instance_profile_name == null && var.enable_ecs ? 1 : 0
 
@@ -235,83 +254,65 @@ resource "aws_iam_role_policy" "main_ecs_access" {
 
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "ecs:DescribeClusters",
-          "ecs:ListClusters",
-          "ecs:DescribeServices",
-          "ecs:ListServices",
-          "ecs:DescribeTasks",
-          "ecs:ListTasks",
-          "ecs:DescribeTaskDefinition",
-          "ecs:ListTaskDefinitions",
-          "ecs:DescribeContainerInstances",
-          "ecs:ListContainerInstances",
-          "ecs:DescribeTaskSets",
-          "ecs:ListTaskSets",
-          "ecs:ListTagsForResource"
-        ]
-        Resource = "*"
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "ecs:RunTask",
-          "ecs:StopTask",
-          "ecs:StartTask"
-        ]
-        Resource = "*"
-        Condition = {
-          StringEquals = {
-            "ecs:cluster" = "*"
+    Statement = concat(
+      [
+        {
+          Sid      = "ECSList"
+          Effect   = "Allow"
+          Action   = ["ecs:ListClusters", "ecs:ListTaskDefinitions", "ecs:ListServices", "ecs:ListTasks"]
+          Resource = "*"
+        },
+        {
+          Sid    = "ECSDescribe"
+          Effect = "Allow"
+          Action = [
+            "ecs:DescribeClusters",
+            "ecs:DescribeServices",
+            "ecs:DescribeTasks",
+            "ecs:DescribeTaskDefinition",
+            "ecs:DescribeContainerInstances",
+            "ecs:ListTagsForResource"
+          ]
+          Resource = concat(local.ecs_cluster_arns, local.ecs_service_arns, local.ecs_task_definition_arns)
+        },
+        {
+          Sid      = "LogsRead"
+          Effect   = "Allow"
+          Action   = ["logs:GetLogEvents", "logs:DescribeLogStreams", "logs:DescribeLogGroups"]
+          Resource = local.log_group_arns
+        }
+      ],
+      var.iam_ecs_allow_task_run ? [
+        {
+          Sid      = "ECSRunStopTask"
+          Effect   = "Allow"
+          Action   = ["ecs:RunTask", "ecs:StopTask"]
+          Resource = local.ecs_task_definition_arns
+          Condition = {
+            ArnEquals = {
+              "ecs:cluster" = local.ecs_cluster_arns
+            }
           }
         }
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "ecs:UpdateService",
-          "ecs:CreateService",
-          "ecs:DeleteService"
-        ]
-        Resource = "*"
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "ecs:RegisterTaskDefinition",
-          "ecs:DeregisterTaskDefinition"
-        ]
-        Resource = "*"
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "ecs:ExecuteCommand"
-        ]
-        Resource = "*"
-        Condition = {
-          StringEquals = {
-            "ecs:cluster" = "*"
-          }
+      ] : [],
+      var.iam_ecs_allow_mutations ? [
+        {
+          Sid      = "ECSServiceMutations"
+          Effect   = "Allow"
+          Action   = ["ecs:UpdateService", "ecs:CreateService", "ecs:DeleteService"]
+          Resource = local.ecs_service_arns
+        },
+        {
+          Sid      = "ECSRegisterTaskDefinition"
+          Effect   = "Allow"
+          Action   = ["ecs:RegisterTaskDefinition", "ecs:DeregisterTaskDefinition"]
+          Resource = local.ecs_task_definition_arns
         }
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "logs:GetLogEvents",
-          "logs:DescribeLogStreams",
-          "logs:DescribeLogGroups"
-        ]
-        Resource = "*"
-      }
-    ]
+      ] : []
+    )
   })
 }
 
-# Additional IAM role policies
 resource "aws_iam_role_policy" "main_custom" {
   for_each = var.iam_instance_profile_enabled && var.iam_instance_profile_name == null ? var.iam_role_policies : {}
 
@@ -320,7 +321,6 @@ resource "aws_iam_role_policy" "main_custom" {
   policy = each.value
 }
 
-# Attach managed policies to IAM role
 resource "aws_iam_role_policy_attachment" "main_managed" {
   for_each = var.iam_instance_profile_enabled && var.iam_instance_profile_name == null ? toset(concat(var.iam_role_policy_arns, var.ec2_external_policy_arns)) : toset([])
 
@@ -328,7 +328,6 @@ resource "aws_iam_role_policy_attachment" "main_managed" {
   policy_arn = each.value
 }
 
-# Attach SSM Session Manager policy (AmazonSSMManagedInstanceCore)
 resource "aws_iam_role_policy_attachment" "main_ssm" {
   count = var.iam_instance_profile_enabled && var.iam_instance_profile_name == null && var.enable_ssm_session_manager ? 1 : 0
 
@@ -336,7 +335,6 @@ resource "aws_iam_role_policy_attachment" "main_ssm" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
-# Instance profile
 resource "aws_iam_instance_profile" "main" {
   count = var.iam_instance_profile_enabled && var.iam_instance_profile_name == null ? 1 : 0
 

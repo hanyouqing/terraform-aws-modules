@@ -48,6 +48,20 @@ resource "aws_security_group" "elb" {
       Type = "elb-security-group"
     }
   )
+
+  lifecycle {
+    precondition {
+      condition     = length(var.elb_ingress_cidr_blocks) > 0
+      error_message = "elb_ingress_cidr_blocks must be set when enable_elb is true (no open default)."
+    }
+
+    precondition {
+      condition = (
+        !contains(var.elb_ingress_cidr_blocks, "0.0.0.0/0") && !contains(var.elb_ingress_cidr_blocks, "::/0")
+      ) || var.allow_public_lb_ingress || var.environment != "production"
+      error_message = "Production ELB cannot use 0.0.0.0/0 or ::/0 unless allow_public_lb_ingress = true."
+    }
+  }
 }
 
 resource "aws_elb" "main" {
